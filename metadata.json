@@ -1,0 +1,6 @@
+{
+  "name": "ClawChives",
+  "description": "Companion application for ClawChives server.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
