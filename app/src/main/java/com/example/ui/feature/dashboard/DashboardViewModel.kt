@@ -70,20 +70,57 @@ class DashboardViewModel(
         if (selectedFilter == filter && selectedFolderId == null) return
         selectedFilter = filter
         selectedFolderId = null
-        loadBookmarks(reset = true)
+        updateUIState()
     }
 
     fun selectFolder(folderId: String?) {
         if (selectedFolderId == folderId) return
         selectedFolderId = folderId
         selectedFilter = "all" // reset to all when inside folder
-        loadBookmarks(reset = true)
+        updateUIState()
     }
 
     fun setSearchQuery(query: String) {
         if (searchQuery == query) return
         searchQuery = query
-        loadBookmarks(reset = true)
+        updateUIState()
+    }
+
+    private fun updateUIState(forceLoadingMoreFalse: Boolean = false) {
+        val currentState = (_uiState.value as? DashboardState.Success)
+        
+        val filtered = loadedBookmarks.filter { bookmark ->
+            val matchesFolder = selectedFolderId == null || bookmark.folderId == selectedFolderId
+            
+            val matchesFilter = when (selectedFilter) {
+                "starred" -> bookmark.starred == true
+                "archived" -> bookmark.archived == true
+                // if we add tags/pinned later, we can filter them here
+                else -> bookmark.archived != true // Usually 'all' excludes archived unless 'archived' is selected
+            }
+            
+            val matchesSearch = if (searchQuery.isBlank()) true else {
+                val q = searchQuery.lowercase()
+                (bookmark.title?.lowercase()?.contains(q) == true) ||
+                (bookmark.url.lowercase().contains(q)) ||
+                (bookmark.description?.lowercase()?.contains(q) == true) ||
+                bookmark.tags.any { it.lowercase().contains(q) }
+            }
+            
+            matchesFolder && matchesFilter && matchesSearch
+        }
+
+        _uiState.value = DashboardState.Success(
+            bookmarks = filtered,
+            folders = cachedFolders,
+            stats = cachedStats,
+            tagsCount = cachedTagsCount,
+            selectedFilter = selectedFilter,
+            selectedFolderId = selectedFolderId,
+            searchQuery = searchQuery,
+            isLoadingMore = if (forceLoadingMoreFalse) false else (currentState?.isLoadingMore ?: false),
+            isLastPage = isLastPage
+        )
     }
 
     fun loadBookmarks(reset: Boolean = true) {
@@ -131,35 +168,32 @@ class DashboardViewModel(
 
                 val result = client.fetchBookmarks(
                     sessionToken = token,
-                    starred = if (selectedFilter == "starred") true else null,
-                    archived = if (selectedFilter == "archived") true else null,
-                    folderId = selectedFolderId,
-                    search = if (searchQuery.isNotBlank()) searchQuery else null,
+                    starred = null,
+                    archived = null,
+                    folderId = null,
+                    search = null,
                     page = currentPage,
                     limit = pageSize
                 )
                 
                 if (result.isSuccess) {
                     val newBookmarks = result.getOrThrow()
+                    // Filter duplicates in case of overlap on refresh
+                    val newIds = newBookmarks.map { it.id }.toSet()
+                    if (reset) {
+                        loadedBookmarks.clear()
+                    } else {
+                        loadedBookmarks.removeAll { it.id in newIds }
+                    }
                     loadedBookmarks.addAll(newBookmarks)
-                    
+
                     if (newBookmarks.size < pageSize) {
                         isLastPage = true
                     } else {
                         currentPage++
                     }
 
-                    _uiState.value = DashboardState.Success(
-                        bookmarks = loadedBookmarks.toList(),
-                        folders = cachedFolders,
-                        stats = cachedStats,
-                        tagsCount = cachedTagsCount,
-                        selectedFilter = selectedFilter,
-                        selectedFolderId = selectedFolderId,
-                        searchQuery = searchQuery,
-                        isLoadingMore = false,
-                        isLastPage = isLastPage
-                    )
+                    updateUIState(forceLoadingMoreFalse = true)
                 } else {
                     if (reset) {
                         _uiState.value = DashboardState.Error(result.exceptionOrNull()?.message ?: "Failed to load bookmarks")

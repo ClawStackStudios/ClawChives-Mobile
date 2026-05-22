@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -70,7 +71,7 @@ import com.example.ui.theme.RedAccent
 import com.example.ui.theme.WarningBoxBg
 import com.example.ui.theme.WarningText
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import com.example.ui.feature.gateway.GatewayViewModel
 import com.example.ui.feature.gateway.GatewayUiState
@@ -83,8 +84,8 @@ fun GatewayScreen(
     modifier: Modifier = Modifier,
     onLoginSuccess: () -> Unit = {}
 ) {
-  val uiState by viewModel.uiState.collectAsState()
-  val savedServerUrl by viewModel.savedServerUrl.collectAsState(initial = null)
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val savedServerUrl by viewModel.savedServerUrl.collectAsStateWithLifecycle(initialValue = null)
   var isUploadMode by remember { mutableStateOf(true) }
   var protocol by remember { mutableStateOf("http") }
   var serverHost by remember { mutableStateOf("") }
@@ -150,12 +151,7 @@ fun GatewayScreen(
                       }
                   }
 
-                  // Prioritize extractor for the "token" field from the identity JSON format
-                  val tokenJsonMatch = """"token"\s*:\s*"([^"]+)"""".toRegex().find(text)
-                  val extractedKey = tokenJsonMatch?.groupValues?.get(1)
-                      ?: """(hu-|lb-)[a-zA-Z0-9_-]+""".toRegex().find(text)?.value
-                      ?: text.trim()
-                  
+                  val extractedKey = cleanAndExtractKey(text)
                   if (extractedKey.isNotEmpty()) {
                       uploadedKey = extractedKey
                       uploadedFileName = fileName
@@ -258,40 +254,27 @@ fun GatewayScreen(
             ),
           verticalAlignment = Alignment.CenterVertically
         ) {
-          // 1. Protocol selector button (white text, cyan background)
+          // 1. Seamless Protocol selector button (white text, cyan background)
           Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier
+              .fillMaxHeight()
+              .background(CyanAccent)
+              .clickable { isProtocolDropdownExpanded = !isProtocolDropdownExpanded }
+              .padding(horizontal = 14.dp)
           ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(CyanAccent)
-                .clickable { isProtocolDropdownExpanded = !isProtocolDropdownExpanded }
-                .padding(horizontal = 8.dp, vertical = 6.dp)
-            ) {
-              Text(
-                text = if (protocol == "https") "https://" else "http://",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-              )
-              Spacer(modifier = Modifier.width(2.dp))
-              Icon(
-                imageVector = if (isProtocolDropdownExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                contentDescription = if (isProtocolDropdownExpanded) "Close protocol selection" else "Open protocol selection",
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-              )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            // Divider
-            Box(
-              modifier = Modifier
-                .width(1.dp)
-                .height(24.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+            Text(
+              text = if (protocol == "https") "https://" else "http://",
+              color = Color.White,
+              fontWeight = FontWeight.Bold,
+              fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+              imageVector = if (isProtocolDropdownExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+              contentDescription = if (isProtocolDropdownExpanded) "Close protocol selection" else "Open protocol selection",
+              tint = Color.White,
+              modifier = Modifier.size(16.dp)
             )
           }
 
@@ -451,7 +434,7 @@ fun GatewayScreen(
         exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
         modifier = Modifier
           .zIndex(110f)
-          .padding(start = 12.dp, top = 60.dp)
+          .padding(start = 0.dp, top = 60.dp)
       ) {
         Card(
           shape = RoundedCornerShape(12.dp),
@@ -586,7 +569,7 @@ fun GatewayScreen(
             append(serverPort.trim())
           }
         }
-        val targetKey = if (isUploadMode) uploadedKey.orEmpty() else keyText
+        val targetKey = cleanAndExtractKey(if (isUploadMode) uploadedKey.orEmpty() else keyText)
         viewModel.login(finalUrl, targetKey)
       },
       enabled = uiState !is GatewayUiState.Loading && isFormValid,
@@ -736,4 +719,25 @@ fun WarningBox() {
       }
     }
   }
+}
+
+fun cleanAndExtractKey(rawInput: String): String {
+    val trimmed = rawInput.trim()
+    if (trimmed.isEmpty()) return ""
+    
+    // Check if it matches a JSON "token" field pattern
+    val tokenJsonMatch = """"token"\s*:\s*"([^"]+)"""".toRegex().find(trimmed)
+    if (tokenJsonMatch != null) {
+        val extracted = tokenJsonMatch.groupValues[1].trim()
+        if (extracted.isNotEmpty()) return extracted
+    }
+    
+    // Look for any key starting with hu- or lb- followed by alphanumeric/dashes/underscores
+    val keyPatternMatch = """(hu-|lb-)[a-zA-Z0-9_-]+""".toRegex().find(trimmed)
+    if (keyPatternMatch != null) {
+        return keyPatternMatch.value.trim()
+    }
+    
+    // Strip trailing/leading extra quotes if present
+    return trimmed.removeSurrounding("\"").removeSurrounding("'").trim()
 }

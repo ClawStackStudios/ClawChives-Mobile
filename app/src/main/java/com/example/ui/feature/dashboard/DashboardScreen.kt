@@ -20,7 +20,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -72,14 +72,14 @@ fun DashboardScreen(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
     var showAddPodDialog by remember { mutableStateOf(false) }
     var bookmarkToEdit by remember { mutableStateOf<Bookmark?>(null) }
     val context = LocalContext.current
-    val sharedUrl by sharedUrlFlow.collectAsState(initial = null)
+    val sharedUrl by sharedUrlFlow.collectAsStateWithLifecycle(initialValue = null)
 
     val activeFilter = (uiState as? DashboardState.Success)?.selectedFilter ?: "all"
     val activeFolderId = (uiState as? DashboardState.Success)?.selectedFolderId
@@ -498,7 +498,10 @@ fun DashboardScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(state.bookmarks) { bookmark ->
+                            items(
+                                items = state.bookmarks,
+                                key = { it.id }
+                            ) { bookmark ->
                                 PinchmarkCard(
                                     bookmark = bookmark,
                                     onLongPress = {
@@ -561,22 +564,48 @@ fun PinchmarkCard(
             }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = bookmark.title ?: bookmark.url,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = bookmark.url,
-                color = CyanAccent,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = bookmark.title ?: bookmark.url,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = bookmark.url,
+                        color = CyanAccent,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (bookmark.pinned || bookmark.starred || bookmark.archived) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        if (bookmark.pinned) {
+                            Text("📌", fontSize = 14.sp)
+                        }
+                        if (bookmark.starred) {
+                            Text("⭐", fontSize = 14.sp)
+                        }
+                        if (bookmark.archived) {
+                            Text("📦", fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+
             if (!bookmark.description.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -586,6 +615,30 @@ fun PinchmarkCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+            if (bookmark.tags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                @OptIn(ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    bookmark.tags.forEach { tag ->
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "#$tag",
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
     }

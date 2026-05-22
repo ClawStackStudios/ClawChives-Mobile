@@ -23,3 +23,8 @@ The foundation of the ClawChives Android companion application has been set up w
 
 ## Phase 3: The Iteration
 We are skipping unnecessary heavy-lifting (Room databases) to provide immediate value. The app acts as a remote for the server.
+
+## Phase 4: Performance & Battery Discipline
+1. **Lifecycle Awareness**: The app exclusively uses `collectAsStateWithLifecycle()` to pause all UI state collection when backgrounded.
+2. **List Rendering Optimization**: The Jetpack Compose UI strictly applies unique identifiers (`key = { it.id }`) for all items in `LazyColumn`s ensuring heavy compositions are skipped.
+3. **On-Demand Fetching**: Instead of battery-draining continuous polling routines, we only fetch when the app is actively commanded to fetch (initial launch, manual refresh pulls).

@@ -56,6 +56,7 @@ data class Bookmark(
     val favicon: String? = null,
     val tags: List<String> = emptyList(),
     val folderId: String? = null,
+    val pinned: Boolean = false,
     val starred: Boolean = false,
     val archived: Boolean = false,
     val color: String? = null,

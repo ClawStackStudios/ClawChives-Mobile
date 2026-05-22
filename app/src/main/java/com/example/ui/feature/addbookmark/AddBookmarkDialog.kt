@@ -437,7 +437,7 @@ fun ManageTagsDialog(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.heightIn(max = 300.dp)
                 ) {
-                    items(tags) { tag ->
+                    items(items = tags, key = { it }) { tag ->
                         val color = getTagColor(tag)
                         Row(
                             modifier = Modifier
