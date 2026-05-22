@@ -144,6 +144,18 @@ data class Folder(
 )
 
 @Serializable
+data class FolderCreateRequest(
+    val name: String,
+    val color: String? = null
+)
+
+@Serializable
+data class FolderSingleResponse(
+    val success: Boolean,
+    val data: Folder
+)
+
+@Serializable
 data class FoldersResponse(
     val success: Boolean,
     val data: List<Folder>

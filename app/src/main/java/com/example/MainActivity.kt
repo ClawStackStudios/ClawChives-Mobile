@@ -85,11 +85,14 @@ fun ClawChivesApp(
   androidx.compose.runtime.LaunchedEffect(Unit) {
       com.example.data.remote.ApiClient.onUnauthorizedCallback = {
           scope.launch {
-              authRepository.logout()
-              val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-              mainHandler.post {
-                  navController.navigate("gateway") {
-                      popUpTo(0) { inclusive = true }
+              val reauthSuccess = authRepository.attemptAutoReauth()
+              if (!reauthSuccess) {
+                  authRepository.logout()
+                  val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                  mainHandler.post {
+                      navController.navigate("gateway") {
+                          popUpTo(0) { inclusive = true }
+                      }
                   }
               }
           }

@@ -250,6 +250,34 @@ class ClawChivesClient(
         }
     }
 
+    /**
+     * 9. Create Folder (Pod)
+     */
+    suspend fun createFolder(
+        sessionToken: String,
+        folderRequest: FolderCreateRequest
+    ): Result<Folder> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response: HttpResponse = client.post("api/folders") {
+                header(HttpHeaders.Authorization, "Bearer $sessionToken")
+                contentType(ContentType.Application.Json)
+                setBody(folderRequest)
+            }
+            handleNetworkDiagnostics(response)
+
+            if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
+                val res = response.body<FolderSingleResponse>()
+                if (res.success) {
+                    res.data
+                } else {
+                    throw Exception("Create folder failed on server")
+                }
+            } else {
+                throw Exception("Create folder failed: ${response.status.value}")
+            }
+        }
+    }
+
     fun close() {
         client.close()
     }

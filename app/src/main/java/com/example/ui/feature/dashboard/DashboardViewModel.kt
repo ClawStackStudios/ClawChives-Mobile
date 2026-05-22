@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import com.example.data.remote.BookmarkUpdateRequest
 import com.example.data.remote.BookmarkStats
 import com.example.data.remote.Folder
+import com.example.data.remote.FolderCreateRequest
 
 sealed interface DashboardState {
     object Loading : DashboardState
@@ -58,6 +59,11 @@ class DashboardViewModel(
 
     init {
         loadBookmarks(reset = true)
+        viewModelScope.launch {
+            authRepository.sessionRefreshed.collect {
+                loadBookmarks(reset = true)
+            }
+        }
     }
 
     fun setFilter(filter: String) {
@@ -193,6 +199,25 @@ class DashboardViewModel(
                 }
             } catch (e: Exception) {
                 onError(e.message ?: "Failed to add bookmark")
+            }
+        }
+    }
+
+    fun addFolder(name: String, color: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val client = ApiClient.getCurrentClient()
+                val token = ApiClient.authToken ?: throw Exception("Not logged in")
+                val request = FolderCreateRequest(name = name, color = color)
+                val result = client.createFolder(token, request)
+                if (result.isSuccess) {
+                    onSuccess()
+                    loadBookmarks(reset = true) // Refresh list including folders
+                } else {
+                    onError(result.exceptionOrNull()?.message ?: "Failed to add pod")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to add pod")
             }
         }
     }

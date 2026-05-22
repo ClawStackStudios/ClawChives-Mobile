@@ -28,6 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
@@ -73,6 +76,7 @@ fun DashboardScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showAddPodDialog by remember { mutableStateOf(false) }
     var bookmarkToEdit by remember { mutableStateOf<Bookmark?>(null) }
     val context = LocalContext.current
     val sharedUrl by sharedUrlFlow.collectAsState(initial = null)
@@ -147,6 +151,25 @@ fun DashboardScreen(
         )
     }
 
+    if (showAddPodDialog) {
+        AddPodDialog(
+            onDismiss = { showAddPodDialog = false },
+            onSubmit = { name, color ->
+                viewModel.addFolder(
+                    name = name,
+                    color = color,
+                    onSuccess = {
+                        showAddPodDialog = false
+                        Toast.makeText(context, "Pod '$name' created!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+        )
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -165,8 +188,10 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "ClawChives",
-                            color = CyanAccent,
+                            text = buildAnnotatedString {
+                                withStyle(style = SpanStyle(color = CyanAccent)) { append("Claw") }
+                                withStyle(style = SpanStyle(color = RedAccent)) { append("Chives") }
+                            },
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -279,14 +304,38 @@ fun DashboardScreen(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     )
 
-                    // Pods (Folders) Header
-                    Text(
-                        text = "PODS",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MutedText,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 6.dp)
-                    )
+                    // Pods (Folders) Header with Add Pod Button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 24.dp, start = 24.dp, top = 6.dp, bottom = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "PODS",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MutedText,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                .clickable {
+                                    showAddPodDialog = true
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Pod",
+                                tint = MutedText,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
 
                     // Folders List
                     if (folders.isEmpty()) {

@@ -20,6 +20,8 @@ class GatewayViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    val savedServerUrl = authRepository.serverUrl
+
     private val _uiState = MutableStateFlow<GatewayUiState>(GatewayUiState.Idle)
     val uiState: StateFlow<GatewayUiState> = _uiState.asStateFlow()
 
