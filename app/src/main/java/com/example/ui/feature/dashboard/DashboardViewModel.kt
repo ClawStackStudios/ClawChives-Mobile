@@ -1,5 +1,6 @@
 package com.example.ui.feature.dashboard
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.remote.ApiClient
@@ -26,6 +27,12 @@ sealed interface DashboardState {
         val selectedFilter: String = "all",
         val selectedFolderId: String? = null,
         val searchQuery: String = "",
+        val sortBy: String = "date-desc",
+        val filterStarred: Boolean = false,
+        val filterPinned: Boolean = false,
+        val filterArchived: Boolean = false,
+        val tagFilter: String? = null,
+        val allTags: List<String> = emptyList(),
         val isLoadingMore: Boolean = false,
         val isLastPage: Boolean = false
     ) : DashboardState
@@ -33,7 +40,8 @@ sealed interface DashboardState {
 }
 
 class DashboardViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val prefs: SharedPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DashboardState>(DashboardState.Loading)
@@ -44,7 +52,7 @@ class DashboardViewModel(
     private var currentPage = 1
     private var isLastPage = false
     private var isCurrentlyLoading = false
-    private val pageSize = 50
+    private var pageSize = 50
 
     var selectedFilter = "all"
         private set
@@ -53,11 +61,24 @@ class DashboardViewModel(
     var searchQuery = ""
         private set
 
+    var sortBy = "date-desc"
+        private set
+    var filterStarred = false
+        private set
+    var filterPinned = false
+        private set
+    var filterArchived = false
+        private set
+    var tagFilter: String? = null
+        private set
+
     private var cachedStats: BookmarkStats? = null
     private var cachedTagsCount = 0
+    private var cachedTags = emptyList<String>()
     private var loadJob: kotlinx.coroutines.Job? = null
 
     init {
+        loadFilterState(selectedFilter, selectedFolderId)
         loadBookmarks(reset = true)
         viewModelScope.launch {
             authRepository.sessionRefreshed.collect {
@@ -66,24 +87,69 @@ class DashboardViewModel(
         }
     }
 
+    private fun saveFilterState() {
+        val prefix = if (selectedFolderId != null) "folder_$selectedFolderId" else "tab_$selectedFilter"
+        prefs.edit()
+            .putBoolean("${prefix}_filterStarred", filterStarred)
+            .putBoolean("${prefix}_filterPinned", filterPinned)
+            .putBoolean("${prefix}_filterArchived", filterArchived)
+            .putString("${prefix}_tagFilter", tagFilter)
+            .putString("${prefix}_sortBy", sortBy)
+            .apply()
+    }
+
+    private fun loadFilterState(newFilter: String, newFolderId: String?) {
+        val prefix = if (newFolderId != null) "folder_$newFolderId" else "tab_$newFilter"
+        filterStarred = prefs.getBoolean("${prefix}_filterStarred", false)
+        filterPinned = prefs.getBoolean("${prefix}_filterPinned", false)
+        filterArchived = prefs.getBoolean("${prefix}_filterArchived", false)
+        tagFilter = prefs.getString("${prefix}_tagFilter", null)
+        sortBy = prefs.getString("${prefix}_sortBy", "date-desc") ?: "date-desc"
+    }
+
     fun setFilter(filter: String) {
         if (selectedFilter == filter && selectedFolderId == null) return
+        saveFilterState()
         selectedFilter = filter
         selectedFolderId = null
-        updateUIState()
+        loadFilterState(selectedFilter, selectedFolderId)
+        loadBookmarks(reset = true)
     }
 
     fun selectFolder(folderId: String?) {
         if (selectedFolderId == folderId) return
+        saveFilterState()
         selectedFolderId = folderId
         selectedFilter = "all" // reset to all when inside folder
-        updateUIState()
+        loadFilterState(selectedFilter, selectedFolderId)
+        loadBookmarks(reset = true)
     }
 
     fun setSearchQuery(query: String) {
         if (searchQuery == query) return
         searchQuery = query
-        updateUIState()
+        loadBookmarks(reset = true)
+    }
+
+    fun setSortBy(sort: String) {
+        if (sortBy == sort) return
+        sortBy = sort
+        saveFilterState()
+        updateUIState() // sorting is local
+    }
+
+    fun setFilterStatus(starred: Boolean, pinned: Boolean, archived: Boolean) {
+        filterStarred = starred
+        filterPinned = pinned
+        filterArchived = archived
+        saveFilterState()
+        loadBookmarks(reset = true)
+    }
+
+    fun setTagFilter(tag: String?) {
+        tagFilter = tag
+        saveFilterState()
+        loadBookmarks(reset = true)
     }
 
     private fun updateUIState(forceLoadingMoreFalse: Boolean = false) {
@@ -95,8 +161,18 @@ class DashboardViewModel(
             val matchesFilter = when (selectedFilter) {
                 "starred" -> bookmark.starred == true
                 "archived" -> bookmark.archived == true
-                // if we add tags/pinned later, we can filter them here
+                "tags" -> bookmark.tags.isNotEmpty() && bookmark.archived != true
                 else -> bookmark.archived != true // Usually 'all' excludes archived unless 'archived' is selected
+            }
+
+            val matchesHeaderFilter = if (!filterStarred && !filterPinned && !filterArchived && tagFilter == null) {
+                true
+            } else {
+                val s = if (filterStarred) bookmark.starred == true else true
+                val p = if (filterPinned) bookmark.pinned == true else true
+                val a = if (filterArchived) bookmark.archived == true else true
+                val t = if (tagFilter != null) bookmark.tags.contains(tagFilter) else true
+                s && p && a && t
             }
             
             val matchesSearch = if (searchQuery.isBlank()) true else {
@@ -107,17 +183,31 @@ class DashboardViewModel(
                 bookmark.tags.any { it.lowercase().contains(q) }
             }
             
-            matchesFolder && matchesFilter && matchesSearch
+            matchesFolder && matchesFilter && matchesHeaderFilter && matchesSearch
+        }
+
+        val sorted = when (sortBy) {
+            "date-desc" -> filtered.sortedByDescending { it.createdAt }
+            "date-asc" -> filtered.sortedBy { it.createdAt }
+            "name-asc" -> filtered.sortedBy { (it.title?.takeIf { it.isNotBlank() } ?: it.url).lowercase() }
+            "name-desc" -> filtered.sortedByDescending { (it.title?.takeIf { it.isNotBlank() } ?: it.url).lowercase() }
+            else -> filtered
         }
 
         _uiState.value = DashboardState.Success(
-            bookmarks = filtered,
+            bookmarks = sorted,
             folders = cachedFolders,
             stats = cachedStats,
             tagsCount = cachedTagsCount,
             selectedFilter = selectedFilter,
             selectedFolderId = selectedFolderId,
             searchQuery = searchQuery,
+            sortBy = sortBy,
+            filterStarred = filterStarred,
+            filterPinned = filterPinned,
+            filterArchived = filterArchived,
+            tagFilter = tagFilter,
+            allTags = cachedTags,
             isLoadingMore = if (forceLoadingMoreFalse) false else (currentState?.isLoadingMore ?: false),
             isLastPage = isLastPage
         )
@@ -162,16 +252,23 @@ class DashboardViewModel(
 
                     val tagsResult = client.fetchTags(token)
                     if (tagsResult.isSuccess) {
-                        cachedTagsCount = tagsResult.getOrThrow().size
+                        val tags = tagsResult.getOrThrow()
+                        cachedTagsCount = tags.size
+                        cachedTags = tags
                     }
                 }
 
+                val apiStarred = if (filterStarred || selectedFilter == "starred") true else null
+                val apiArchived = if (filterArchived || selectedFilter == "archived") true else null
+                val apiSearch = searchQuery.takeIf { it.isNotBlank() }
+                
                 val result = client.fetchBookmarks(
                     sessionToken = token,
-                    starred = null,
-                    archived = null,
-                    folderId = null,
-                    search = null,
+                    starred = apiStarred,
+                    archived = apiArchived,
+                    folderId = selectedFolderId,
+                    search = apiSearch,
+                    tag = tagFilter,
                     page = currentPage,
                     limit = pageSize
                 )
@@ -215,6 +312,53 @@ class DashboardViewModel(
                 }
             } finally {
                 isCurrentlyLoading = false
+            }
+        }
+    }
+
+    fun updateFolder(folderId: String, request: com.example.data.remote.FolderUpdateRequest, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val client = ApiClient.getCurrentClient()
+                val token = ApiClient.authToken ?: throw Exception("Not logged in")
+                val result = client.updateFolder(token, folderId, request)
+                if (result.isSuccess) {
+                    onSuccess()
+                    loadBookmarks(reset = true)
+                } else {
+                    onError(result.exceptionOrNull()?.message ?: "Failed to update folder")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to update folder")
+            }
+        }
+    }
+
+    fun deleteFolder(folderId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val client = ApiClient.getCurrentClient()
+                val token = ApiClient.authToken ?: throw Exception("Not logged in")
+                val result = client.deleteFolder(token, folderId)
+                if (result.isSuccess) {
+                    // Cascading Unassociation
+                    cachedFolders = cachedFolders.filter { it.id != folderId }
+                    val updatedBookmarks = loadedBookmarks.map { 
+                        if (it.folderId == folderId) it.copy(folderId = null) else it 
+                    }
+                    loadedBookmarks.clear()
+                    loadedBookmarks.addAll(updatedBookmarks)
+                    if (selectedFolderId == folderId) {
+                        selectedFolderId = null
+                        selectedFilter = "all"
+                    }
+                    updateUIState()
+                    onSuccess()
+                } else {
+                    onError(result.exceptionOrNull()?.message ?: "Failed to delete folder")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to delete folder")
             }
         }
     }

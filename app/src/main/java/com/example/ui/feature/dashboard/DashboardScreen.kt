@@ -18,6 +18,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -420,6 +426,18 @@ fun DashboardScreen(
             }
         }
     ) {
+        var showViewBottomSheet by remember { mutableStateOf(false) }
+        val currentState = uiState as? DashboardState.Success
+        if (showViewBottomSheet && currentState != null) {
+            ViewOptionsBottomSheet(
+                state = currentState,
+                onFilterStatusChange = { s, p, a -> viewModel.setFilterStatus(s, p, a) },
+                onTagFilterChange = { t -> viewModel.setTagFilter(t) },
+                onSortChange = { viewModel.setSortBy(it) },
+                onDismiss = { showViewBottomSheet = false }
+            )
+        }
+
         Scaffold(
             topBar = {
                 val titleText = when {
@@ -441,16 +459,22 @@ fun DashboardScreen(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
                         titleContentColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    actions = {
-                        IconButton(onClick = { 
+                    )
+                )
+            },
+            bottomBar = {
+                if (currentState != null) {
+                    val hasActiveFilters = currentState.filterStarred || currentState.filterPinned || currentState.filterArchived || currentState.tagFilter != null
+                    CustomBottomBarWithHump(
+                        onViewClick = { showViewBottomSheet = true },
+                        onRightClick = { /* Settings Placeholder */ },
+                        onAddClick = { 
                             bookmarkToEdit = null
                             showAddDialog = true 
-                        }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Bookmark", tint = CyanAccent)
-                        }
-                    }
-                )
+                        },
+                        hasActiveFilters = hasActiveFilters
+                    )
+                }
             },
             modifier = modifier.fillMaxSize()
         ) { innerPadding ->
@@ -694,6 +718,235 @@ fun DrawerNavItem(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ViewOptionsBottomSheet(
+    state: DashboardState.Success,
+    onFilterStatusChange: (Boolean, Boolean, Boolean) -> Unit,
+    onTagFilterChange: (String?) -> Unit,
+    onSortChange: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp)
+        ) {
+            Text("VIEW OPTIONS", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = CyanAccent)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sort
+            Text("SORT BY", fontSize = 10.sp, fontWeight = FontWeight.Black, color = MutedText)
+            Spacer(modifier = Modifier.height(8.dp))
+            val sortOptions = listOf(
+                "date-desc" to "Newest First",
+                "date-asc" to "Oldest First",
+                "name-asc" to "Name A→Z",
+                "name-desc" to "Name Z→A"
+            )
+            sortOptions.forEach { (value, label) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().clickable { onSortChange(value) }.padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
+                    if (state.sortBy == value) {
+                        Icon(Icons.Default.Check, contentDescription = null, tint = CyanAccent)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Filter Focus
+            Text("FILTER STATUS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = MutedText)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Starred
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onFilterStatusChange(!state.filterStarred, state.filterPinned, state.filterArchived) }.padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = if (state.filterStarred) WarningText else MutedText)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Starred", color = if (state.filterStarred) WarningText else MaterialTheme.colorScheme.onSurface, fontWeight = if (state.filterStarred) FontWeight.Bold else FontWeight.Normal, fontSize = 16.sp)
+                }
+                if (state.filterStarred) Icon(Icons.Default.Check, contentDescription = null, tint = WarningText)
+            }
+
+            // Pinned
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onFilterStatusChange(state.filterStarred, !state.filterPinned, state.filterArchived) }.padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = if (state.filterPinned) androidx.compose.ui.graphics.Color(0xFFD946EF) else MutedText)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Pinned", color = if (state.filterPinned) androidx.compose.ui.graphics.Color(0xFFD946EF) else MaterialTheme.colorScheme.onSurface, fontWeight = if (state.filterPinned) FontWeight.Bold else FontWeight.Normal, fontSize = 16.sp)
+                }
+                if (state.filterPinned) Icon(Icons.Default.Check, contentDescription = null, tint = androidx.compose.ui.graphics.Color(0xFFD946EF))
+            }
+
+            // Archived
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onFilterStatusChange(state.filterStarred, state.filterPinned, !state.filterArchived) }.padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, tint = if (state.filterArchived) CyanAccent else MutedText)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Archived", color = if (state.filterArchived) CyanAccent else MaterialTheme.colorScheme.onSurface, fontWeight = if (state.filterArchived) FontWeight.Bold else FontWeight.Normal, fontSize = 16.sp)
+                }
+                if (state.filterArchived) Icon(Icons.Default.Check, contentDescription = null, tint = CyanAccent)
+            }
+
+            if (state.allTags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("TAGS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = MutedText)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                state.allTags.forEach { tag ->
+                    val isSelected = state.tagFilter == tag
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { onTagFilterChange(if (isSelected) null else tag) }.padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Favorite, contentDescription = null, tint = if (isSelected) CyanAccent else MutedText)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(tag, color = if (isSelected) CyanAccent else MaterialTheme.colorScheme.onSurface, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal, fontSize = 16.sp)
+                        }
+                        if (isSelected) Icon(Icons.Default.Check, contentDescription = null, tint = CyanAccent)
+                    }
+                }
+            }
+            
+            val isActive = state.filterStarred || state.filterPinned || state.filterArchived || state.tagFilter != null
+            if (isActive) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { 
+                        onFilterStatusChange(false, false, false)
+                        onTagFilterChange(null)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Clear Filters", color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomBottomBarWithHump(
+    onViewClick: () -> Unit,
+    onRightClick: () -> Unit,
+    onAddClick: () -> Unit,
+    hasActiveFilters: Boolean
+) {
+    val bgColor = MaterialTheme.colorScheme.background
+    val lineColor = MaterialTheme.colorScheme.surfaceVariant
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(92.dp), // 36dp hump height + 56dp bar height
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val barHeight = 56.dp.toPx()
+            val yOffset = size.height - barHeight
+            val cx = size.width / 2f
+            val radius = 36.dp.toPx()
+
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, yOffset)
+                lineTo(cx - radius, yOffset)
+                arcTo(
+                    rect = androidx.compose.ui.geometry.Rect(cx - radius, yOffset - radius, cx + radius, yOffset + radius),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
+                lineTo(size.width, yOffset)
+                lineTo(size.width, size.height)
+                lineTo(0f, size.height)
+                close()
+            }
+            drawPath(path = path, color = bgColor)
+
+            val strokePath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, yOffset)
+                lineTo(cx - radius, yOffset)
+                arcTo(
+                    rect = androidx.compose.ui.geometry.Rect(cx - radius, yOffset - radius, cx + radius, yOffset + radius),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
+                lineTo(size.width, yOffset)
+            }
+            drawPath(
+                path = strokePath,
+                color = lineColor,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box {
+                IconButton(onClick = onViewClick) {
+                    Icon(Icons.Default.Tune, contentDescription = "View Options", tint = if (hasActiveFilters) CyanAccent else MaterialTheme.colorScheme.onSurface)
+                }
+                if (hasActiveFilters) {
+                    Box(modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(8.dp).background(CyanAccent, CircleShape))
+                }
+            }
+            
+            IconButton(onClick = onRightClick) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurface)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 8.dp) 
+        ) {
+            FloatingActionButton(
+                onClick = onAddClick,
+                containerColor = CyanAccent,
+                shape = CircleShape,
+                modifier = Modifier.size(56.dp),
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Bookmark", tint = Color.Black)
             }
         }
     }

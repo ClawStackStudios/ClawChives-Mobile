@@ -148,7 +148,23 @@ data class Folder(
 data class FolderCreateRequest(
     val name: String,
     val color: String? = null
-)
+) {
+    fun sanitize(): FolderCreateRequest {
+        val sanitizedColor = color?.takeIf { it.isNotBlank() && it.startsWith("#") && (it.length == 4 || it.length == 7 || it.length == 9) } ?: "#0EA5E9" // CyanAccent
+        return copy(name = name.trim(), color = sanitizedColor)
+    }
+}
+
+@Serializable
+data class FolderUpdateRequest(
+    val name: String? = null,
+    val color: String? = null
+) {
+    fun sanitize(): FolderUpdateRequest {
+        val sanitizedColor = color?.takeIf { it.isNotBlank() && it.startsWith("#") && (it.length == 4 || it.length == 7 || it.length == 9) } ?: "#0EA5E9" // CyanAccent
+        return copy(name = name?.trim(), color = sanitizedColor)
+    }
+}
 
 @Serializable
 data class FolderSingleResponse(

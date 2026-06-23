@@ -1,6 +1,7 @@
 package com.example
 
 import android.os.Bundle
+import androidx.compose.runtime.remember
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -34,11 +35,13 @@ import com.example.ui.theme.MyApplicationTheme
 import android.content.Intent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : ComponentActivity() {
   private val sharedUrlState = MutableStateFlow<String?>(null)
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    installSplashScreen()
     super.onCreate(savedInstanceState)
     handleIntent(intent)
     enableEdgeToEdge()
@@ -124,8 +127,10 @@ fun ClawChivesApp(
       }
     }
     composable("dashboard") {
+      val context = LocalContext.current
+      val prefs = remember { context.applicationContext.getSharedPreferences("dashboard_prefs", android.content.Context.MODE_PRIVATE) }
       val dashboardViewModel: DashboardViewModel = viewModel(
-        factory = DashboardViewModelFactory(authRepository)
+        factory = DashboardViewModelFactory(authRepository, prefs)
       )
 
       DashboardScreen(

@@ -17,6 +17,7 @@ class AuthRepository(private val authPreferences: AuthPreferences) {
     val sessionRefreshed: SharedFlow<Unit> = _sessionRefreshed.asSharedFlow()
 
     val serverUrl: Flow<String?> = authPreferences.serverUrl
+    val rawKey: Flow<String?> = authPreferences.rawKey
 
     suspend fun loginWithKey(serverUrl: String, key: String): Result<Unit> {
         return try {

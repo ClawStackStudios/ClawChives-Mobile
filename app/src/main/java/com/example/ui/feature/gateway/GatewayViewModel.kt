@@ -21,6 +21,13 @@ class GatewayViewModel(
 ) : ViewModel() {
 
     val savedServerUrl = authRepository.serverUrl
+    val savedKey = authRepository.rawKey
+
+    fun clearSavedKey() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
 
     private val _uiState = MutableStateFlow<GatewayUiState>(GatewayUiState.Idle)
     val uiState: StateFlow<GatewayUiState> = _uiState.asStateFlow()
@@ -33,11 +40,9 @@ class GatewayViewModel(
         viewModelScope.launch {
             _uiState.update { GatewayUiState.Loading }
             val hasSession = authRepository.loadExistingSession()
-            if (hasSession) {
-                _uiState.update { GatewayUiState.Success(true) }
-            } else {
-                _uiState.update { GatewayUiState.Idle }
-            }
+            // We do not auto-invoke Success(true) here anymore, 
+            // so the user sees the pre-filled form with their saved key.
+            _uiState.update { GatewayUiState.Idle }
         }
     }
 

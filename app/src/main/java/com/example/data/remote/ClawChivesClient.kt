@@ -1,7 +1,9 @@
 package com.example.data.remote
 
 import android.util.Log
-import io.ktor.client.*
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -30,7 +32,8 @@ suspend fun handleNetworkDiagnostics(response: HttpResponse) {
 
 class ClawChivesClient(
     private val baseUrl: String, // Format: http://192.168.1.150:4646 or https://domain.com
-    private val onUnauthorized: (() -> Unit)? = null
+    private val onUnauthorized: (() -> Unit)? = null,
+    engine: HttpClientEngine? = null
 ) {
     // 🛡️ Security Check: Ensure standard JSON parser ignores unknown elements (stability lock)
     private val jsonConfig = Json {
@@ -39,7 +42,9 @@ class ClawChivesClient(
         encodeDefaults = true
     }
 
-    private val client = HttpClient {
+    private val client = if (engine != null) HttpClient(engine) { configure() } else HttpClient { configure() }
+
+    private fun HttpClientConfig<*>.configure() {
         install(ContentNegotiation) {
             json(jsonConfig)
         }
@@ -48,6 +53,10 @@ class ClawChivesClient(
                 val base = baseUrl.removeSuffix("/")
                 takeFrom(base + "/") // ensure trailing slash is handled correctly, Ktor can be picky
             }
+            // Enforce stable API version boundary
+            header("X-Client-Version", "1.0")
+            header("Accept-Version", "1.0")
+            header("Accept", "application/json")
         }
         HttpResponseValidator {
             validateResponse { response ->
@@ -109,6 +118,7 @@ class ClawChivesClient(
         archived: Boolean? = null,
         folderId: String? = null,
         search: String? = null,
+        tag: String? = null,
         limit: Int = 50,
         page: Int = 1
     ): Result<List<Bookmark>> = withContext(Dispatchers.IO) {
@@ -121,6 +131,7 @@ class ClawChivesClient(
                 archived?.let { parameter("archived", it) }
                 folderId?.let { parameter("folderId", it) }
                 search?.let { parameter("search", it) }
+                tag?.let { parameter("tag", it) }
             }
 
             if (response.status == HttpStatusCode.OK) {
@@ -261,7 +272,7 @@ class ClawChivesClient(
             val response: HttpResponse = client.post("api/folders") {
                 header(HttpHeaders.Authorization, "Bearer $sessionToken")
                 contentType(ContentType.Application.Json)
-                setBody(folderRequest)
+                setBody(folderRequest.sanitize())
             }
             handleNetworkDiagnostics(response)
 
@@ -274,6 +285,44 @@ class ClawChivesClient(
                 }
             } else {
                 throw Exception("Create folder failed: ${response.status.value}")
+            }
+        }
+    }
+
+    suspend fun updateFolder(
+        sessionToken: String,
+        folderId: String,
+        request: FolderUpdateRequest
+    ): Result<Folder> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response: HttpResponse = client.put("api/folders/$folderId") {
+                header(HttpHeaders.Authorization, "Bearer $sessionToken")
+                contentType(ContentType.Application.Json)
+                setBody(request.sanitize())
+            }
+            handleNetworkDiagnostics(response)
+
+            if (response.status == HttpStatusCode.OK) {
+                val res = response.body<FolderSingleResponse>()
+                if (res.success) res.data else throw Exception("Update folder failed on server")
+            } else {
+                throw Exception("Update folder failed: ${response.status.value}")
+            }
+        }
+    }
+
+    suspend fun deleteFolder(
+        sessionToken: String,
+        folderId: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response: HttpResponse = client.delete("api/folders/$folderId") {
+                header(HttpHeaders.Authorization, "Bearer $sessionToken")
+            }
+            handleNetworkDiagnostics(response)
+
+            if (response.status != HttpStatusCode.OK && response.status != HttpStatusCode.NoContent) {
+                throw Exception("Delete folder failed: ${response.status.value}")
             }
         }
     }

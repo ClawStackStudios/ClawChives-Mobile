@@ -86,7 +86,8 @@ fun GatewayScreen(
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
   val savedServerUrl by viewModel.savedServerUrl.collectAsStateWithLifecycle(initialValue = null)
-  var isUploadMode by remember { mutableStateOf(true) }
+  val savedKey by viewModel.savedKey.collectAsStateWithLifecycle(initialValue = null)
+  var isUploadMode by remember { mutableStateOf(false) } // Default to false so Paste Key is shown if pre-filled
   var protocol by remember { mutableStateOf("http") }
   var serverHost by remember { mutableStateOf("") }
   var serverPort by remember { mutableStateOf("") }
@@ -168,6 +169,16 @@ fun GatewayScreen(
       savedServerUrl?.let { url ->
           if (serverHost.isEmpty() && url.isNotEmpty()) {
               parseAndSetUrl(url)
+          }
+      }
+  }
+
+  // Pre-populate Key if savedKey is available
+  androidx.compose.runtime.LaunchedEffect(savedKey) {
+      savedKey?.let { key ->
+          if (keyText.isEmpty() && key.isNotEmpty()) {
+              keyText = key
+              isUploadMode = false
           }
       }
   }
@@ -535,7 +546,15 @@ fun GatewayScreen(
         }
       )
     } else {
-      PasteKeyView(keyText, { keyText = it })
+      PasteKeyView(
+          keyText = keyText,
+          onKeyTextChanged = { keyText = it },
+          hasSavedKey = savedKey != null,
+          onClearSavedKey = {
+              viewModel.clearSavedKey()
+              keyText = ""
+          }
+      )
     }
 
     Spacer(modifier = Modifier.weight(1f))
@@ -659,7 +678,12 @@ fun UploadFileView(
 }
 
 @Composable
-fun PasteKeyView(keyText: String, onKeyTextChanged: (String) -> Unit) {
+fun PasteKeyView(
+    keyText: String, 
+    onKeyTextChanged: (String) -> Unit,
+    hasSavedKey: Boolean,
+    onClearSavedKey: () -> Unit
+) {
   var passwordVisible by remember { mutableStateOf(false) }
 
   Column(modifier = Modifier.fillMaxWidth()) {
@@ -684,6 +708,18 @@ fun PasteKeyView(keyText: String, onKeyTextChanged: (String) -> Unit) {
         unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant
       )
     )
+    
+    if (hasSavedKey && keyText.isNotEmpty()) {
+      Spacer(modifier = Modifier.height(16.dp))
+      Button(
+         onClick = onClearSavedKey,
+         modifier = Modifier.fillMaxWidth(),
+         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+         shape = RoundedCornerShape(8.dp)
+      ) {
+         Text("Clear Saved Key", color = MaterialTheme.colorScheme.onSurfaceVariant)
+      }
+    }
     
     Spacer(modifier = Modifier.height(16.dp))
     
