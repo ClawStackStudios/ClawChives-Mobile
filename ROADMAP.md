@@ -1,6 +1,6 @@
 ---
-roadmap_version: X.X.X
-last_updated: 2026-05-17
+roadmap_version: 0.0.4.0
+last_updated: 2026-06-24
 current_position: "Phase 1: [Phase Name] — Sprint 1.1: [Sprint Name]"
 statistics:
 description: "[Insert a 1-2 sentence high-level objective of the project/repository here.]"
@@ -172,6 +172,10 @@ Description: [Detailed explanation of what needs to be built, the technical requ
 > Success Criteria: [Clear, binary conditions that determine when this task can be marked complete.]
 
 ## Completed Tasks
+
+- [x] Unify all authentication and sensitive configurations into the local Room Database and eliminate SharedPreferences usage for keys and tokens.
+
+- [x] Persist local dashboard interactions (starred tabs, active folders, selected tags, sort orders) across application restarts.
 
 - [x] Add a slide-in entrance animation for the new settings menu when opened from the sidebar to provide a smoother, more cohesive UI experience.
 

@@ -1,8 +1,8 @@
 ---
 
-# 🦞 ClawChives — Release v0.0.3.0
+# 🦞 ClawChives — Release v0.0.4.0
 
-## *The Personalization & Persistence Molt*
+## *The Storage Unification Molt*
 
 ```text
        ______ __                 ______  __     _                     
@@ -24,33 +24,24 @@
 
 ## 🚀 The Core Summary
 
-Welcome to **v0.0.3.0** of **ClawChives**! This release introduces robust personalization and foundational persistence upgrades. We have rolled out a comprehensive **Settings Menu** with a responsive slide-in animation, enabled **OS-level Theme Synchronization** with resilient state persistence, integrated a global **Toast Notification System** for streamlined user feedback, and upgraded our local configuration architecture to use the **Room Database** for enduring server configurations.
+Welcome to **v0.0.4.0** of **ClawChives**! This release unifies our local data persistence into a single robust source of truth. We have completely removed cleartext `SharedPreferences` for sensitive authentication state, migrating everything into our isolated Android Room Database (`AppDatabase`). Additionally, Dashboard filter states are now fully persisted locally, retaining your selected tabs, active tags, and search contexts across application restarts.
 
 ---
 
 ## 💎 Key Themes & Highlights
 
-### 🎨 1. Personalization & Theming
+### 💾 1. Storage Unification & Security Hardening
 
-Aesthetics meet user preferences with synchronized system theming.
+Our persistence layer is now unified, testable, and secure.
 
-* **Responsive Settings Menu:** Introduced a sleek Settings Menu triggered via the sidebar, utilizing smooth slide-in/slide-out entrance animations for a cohesive UI experience.
-* **OS-Level Theme Sync:** Upgraded the theme selection to a four-option split button (Light, Dark, OLED, System), automatically deferring to device-level Light/Dark mode when System is selected.
-* **Theme Persistence:** Integrated robust local storage via SharedPreferences (`ThemePreferences`) to ensure user styling preferences survive application restarts seamlessly.
-* **Diagnostics Integration:** Added an 'About' section directly into the Settings Menu displaying app versions alongside real-time connectivity status to the ClawChives server.
+* **Room Database Consolidation:** Eliminated `AuthPreferences` (`SharedPreferences`) for session tokens and raw keys, storing the unified `AppConfig` locally inside the structured Room Database.
+* **Privacy & Security Alignment:** Aligned the data layer with privacy and security mandates (see `SECURITY.md` and `PRIVACY.md`) by exclusively using the robust local sandbox database to store configuration.
 
-### 🔔 2. Observability & User Feedback
+### 🗂️ 2. State Persistence
 
-Critical feedback should never interrupt the workflow.
+Your workflow should remain unbroken.
 
-* **Global Toast Notification System:** Designed and implemented a reactive global Toast overlay (`ToastState`, `ToastHost`). Warnings and errors (e.g., server connectivity loss) are now surfaced via non-blocking cyan/red floating toasts perfectly anchored above the interaction zones.
-
-### 💾 3. Data Persistence Architecture
-
-Strengthening our persistence layer to lay the groundwork for advanced offline capabilities.
-
-* **Room Database Integration:** Migrated the server URL configuration out of volatile or basic preferences into a dedicated Android Room Database (`ServerConfig`).
-* **Architectural Decoupling:** Re-orchestrated the `AuthRepository` to fetch configurations seamlessly via the Room DAO, ensuring the local storage source of truth is robust and testable for future multi-profile expansions.
+* **Dashboard State Retention:** Dashboard interactions (starred tabs, active folders, selected tags, sort orders) are now saved locally using `FilterStateDao`. When returning to the app, your previous view is exactly as you left it.
 
 ---
 
@@ -74,8 +65,7 @@ Strengthening our persistence layer to lay the groundwork for advanced offline c
                     ▼                            
 ┌───────────────────────────────────────────────┐
 │            💾 [Local Data Layer]              │
-│        [Room Database: ServerConfig]          │
-│        [SharedPreferences: Auth Data]         │
+│   [Room Database: AppConfig, FilterState]     │
 └───────────────────┬───────────────────────────┘
                     │                            
                     ▼                            
@@ -87,15 +77,11 @@ Strengthening our persistence layer to lay the groundwork for advanced offline c
 
 ---
 
-## 📋 Commit Ledger (Since `v0.0.2.0`)
+## 📋 Commit Ledger (Since `v0.0.3.0`)
 
-* `[commit_hash]` — **feat:** implement responsive Settings Menu with slide-in animations
-* `[commit_hash]` — **feat:** add OS-level System Theme sync and 4-way theme selector
-* `[commit_hash]` — **feat:** persist theme preferences locally using SharedPreferences
-* `[commit_hash]` — **feat:** integrate Diagnostics 'About' module into Settings
-* `[commit_hash]` — **feat:** build global Toast notification overlay for error visibility
-* `[commit_hash]` — **refactor:** migrate Server URL configuration to Room Database
-* `[commit_hash]` — **docs:** update STATE.md mapping ViewModels and Data Layer logic
+* `[commit_hash]` — **refactor:** migrate Auth data from SharedPreferences to Room Database
+* `[commit_hash]` — **feat:** implement local state persistence for Dashboard UI configurations
+* `[commit_hash]` — **docs:** bump documentation and release notes to `v0.0.4.0`
 
 ---
 
