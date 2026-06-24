@@ -82,7 +82,8 @@ fun DashboardScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
-    var showAddPodDialog by remember { mutableStateOf(false) }
+    var showPodEditDialog by remember { mutableStateOf(false) }
+    var podToEdit by remember { mutableStateOf<Folder?>(null) }
     var bookmarkToEdit by remember { mutableStateOf<Bookmark?>(null) }
     val context = LocalContext.current
     val sharedUrl by sharedUrlFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -157,22 +158,61 @@ fun DashboardScreen(
         )
     }
 
-    if (showAddPodDialog) {
-        AddPodDialog(
-            onDismiss = { showAddPodDialog = false },
-            onSubmit = { name, color ->
-                viewModel.addFolder(
-                    name = name,
-                    color = color,
-                    onSuccess = {
-                        showAddPodDialog = false
-                        Toast.makeText(context, "Pod '$name' created!", Toast.LENGTH_SHORT).show()
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
-                    }
-                )
-            }
+    if (showPodEditDialog) {
+        val currentBookmarksCount = if (podToEdit != null) {
+            (uiState as? DashboardState.Success)?.bookmarks?.count { it.folderId == podToEdit?.id } ?: 0
+        } else 0
+        PodEditDialog(
+            folder = podToEdit,
+            bookmarkCount = currentBookmarksCount,
+            onDismiss = { 
+                showPodEditDialog = false 
+                podToEdit = null
+            },
+            onSave = { name, color ->
+                if (podToEdit != null) {
+                    viewModel.updateFolder(
+                        folderId = podToEdit!!.id,
+                        request = com.example.data.remote.FolderUpdateRequest(name = name, color = color),
+                        onSuccess = {
+                            showPodEditDialog = false
+                            podToEdit = null
+                            Toast.makeText(context, "Pod '$name' updated!", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { error ->
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                } else {
+                    viewModel.addFolder(
+                        name = name,
+                        color = color,
+                        onSuccess = {
+                            showPodEditDialog = false
+                            podToEdit = null
+                            Toast.makeText(context, "Pod '$name' created!", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { error ->
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
+            },
+            onDelete = if (podToEdit != null) {
+                {
+                    viewModel.deleteFolder(
+                        folderId = podToEdit!!.id,
+                        onSuccess = {
+                            showPodEditDialog = false
+                            podToEdit = null
+                            Toast.makeText(context, "Pod deleted!", Toast.LENGTH_SHORT).show()
+                        },
+                        onError = { error ->
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
+            } else null
         )
     }
 
@@ -330,7 +370,8 @@ fun DashboardScreen(
                                 .clip(RoundedCornerShape(9.dp))
                                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                                 .clickable {
-                                    showAddPodDialog = true
+                                    podToEdit = null
+                                    showPodEditDialog = true
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -375,6 +416,10 @@ fun DashboardScreen(
                                 onClick = {
                                     viewModel.selectFolder(folder.id)
                                     scope.launch { drawerState.close() }
+                                },
+                                onEditClick = {
+                                    podToEdit = folder
+                                    showPodEditDialog = true
                                 }
                             )
                         }
@@ -677,7 +722,8 @@ fun DrawerNavItem(
     activeBgColor: Color,
     activeTextColor: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -701,7 +747,9 @@ fun DrawerNavItem(
             color = if (selected) activeTextColor else MaterialTheme.colorScheme.onSurface,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         if (badgeValue != null) {
             Box(
@@ -717,6 +765,20 @@ fun DrawerNavItem(
                     color = if (selected) activeTextColor else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        if (onEditClick != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings, // Settings or another icon for edit
+                    contentDescription = "Edit Pod",
+                    tint = MutedText,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

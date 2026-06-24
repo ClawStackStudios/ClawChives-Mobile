@@ -187,7 +187,7 @@ The system should be able to send notifications for events like new agent key ge
 - [ ] Implement offline access and synchronization for the ClawChives mobile companion app. The app should cache pinchmark data locally, allowing users to view and make basic edits (like starring or archiving)
 - [ ] while offline. Upon re-establishing a connection, these changes should be synced with the server.
 - [ ] Add a small visual indicator (like a colored dot) to the bottom navigation bar to signal active server connection status in real-time.
-
+- [ ] Integrate a secure cloud synchronization feature for ClawChives. Allow users to opt-in to sync their pinchmarks to a chosen cloud storage provider (e.g., S3, Google Drive). Ensure end-to-end encryption for all synced data.
 - [ ] Implement haptic vibration feedback for the central '+' button and the bottom navigation elements to match standard Android interaction patterns.
 
 - [ ] Integrate the Google Search grounding capability to allow users to pull in fresh metadata or status information for their ClawChives server items directly from the web.
