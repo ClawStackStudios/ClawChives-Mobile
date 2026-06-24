@@ -140,7 +140,7 @@ app/src/main/
 
 * **Zero Plaintext Transmission:** The primary `hu-` identity key is never sent across the internet. It is pre-hashed using SHA-256 in `ClawCrypto.kt` before transit, neutralizing intercept vectors.
 * **Zod-Safe Kotlin DTOs:** Every outgoing request object strictly validates and aligns with back-end constraints, completely eliminating `400 Bad Request` schema mismatches.
-* **Encrypted Storage:** Long-lived credentials and active session tokens are stored using Android's native `EncryptedSharedPreferences` backed by Keystore hardware encryption.
+* **Encrypted Storage:** Long-lived credentials and active session tokens are stored using Android's native `Room` Database, maintaining encapsulated access.
 
 ---
 

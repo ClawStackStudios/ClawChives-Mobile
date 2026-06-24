@@ -18,7 +18,7 @@ The native Android app **NEVER** transits the `hu-` master key over the network 
 ## 2. On-Device Storage Hardening
 
 Tokens MUST NEVER be stored in standard Android `SharedPreferences` locally.
-Tokens MUST be stored using Jetpack Security's **EncryptedSharedPreferences**, which uses `AndroidKeyStore` to wrap and encrypt values locally.
+Tokens MUST be stored within the **Room Database** (`AppConfig` entity), which is isolated to the application's sandbox. The `AppDatabase` maintains the sole truth for local configuration across OS upgrades and app migrations.
 
 ---
 

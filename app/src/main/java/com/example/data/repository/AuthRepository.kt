@@ -1,29 +1,27 @@
 package com.example.data.repository
 
-import com.example.data.local.AuthPreferences
-import com.example.data.local.ServerConfig
-import com.example.data.local.ServerConfigDao
+import com.example.data.local.AppConfig
+import com.example.data.local.AppConfigDao
 import com.example.data.remote.ApiClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class AuthRepository(
-    private val authPreferences: AuthPreferences,
-    private val serverConfigDao: ServerConfigDao
+    private val appConfigDao: AppConfigDao
 ) {
 
     private val reauthMutex = Mutex()
     private val _sessionRefreshed = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val sessionRefreshed: SharedFlow<Unit> = _sessionRefreshed.asSharedFlow()
 
-    val serverUrl: Flow<String?> = serverConfigDao.getServerConfig().map { it?.serverUrl }
-    val rawKey: Flow<String?> = authPreferences.rawKey
+    val serverUrl: Flow<String?> = appConfigDao.getConfigFlow().map { it?.serverUrl }.distinctUntilChanged()
+    val rawKey: Flow<String?> = appConfigDao.getConfigFlow().map { it?.rawKey }.distinctUntilChanged()
 
     suspend fun loginWithKey(serverUrl: String, key: String): Result<Unit> {
         return try {
@@ -32,10 +30,13 @@ class AuthRepository(
             
             if (responseResult.isSuccess) {
                 val sessionData = responseResult.getOrThrow()
-                // Save preferences
-                serverConfigDao.insertConfig(ServerConfig(serverUrl = serverUrl))
-                authPreferences.saveAuthToken(sessionData.token)
-                authPreferences.saveRawKey(key)
+                // Save config
+                val currentConfig = appConfigDao.getConfigSync() ?: AppConfig()
+                appConfigDao.insertConfig(currentConfig.copy(
+                    serverUrl = serverUrl,
+                    authToken = sessionData.token,
+                    rawKey = key
+                ))
                 
                 // Update API Client
                 ApiClient.updateAuthToken(sessionData.token)
@@ -50,8 +51,9 @@ class AuthRepository(
 
     suspend fun attemptAutoReauth(): Boolean {
         return reauthMutex.withLock {
-            val serverUrlVal = serverConfigDao.getServerConfigSync()?.serverUrl ?: return false
-            val rawKeyVal = authPreferences.getRawKeySync() ?: return false
+            val config = appConfigDao.getConfigSync() ?: return false
+            val serverUrlVal = config.serverUrl ?: return false
+            val rawKeyVal = config.rawKey ?: return false
             
             val result = loginWithKey(serverUrlVal, rawKeyVal)
             if (result.isSuccess) {
@@ -64,8 +66,9 @@ class AuthRepository(
     }
 
     suspend fun loadExistingSession(): Boolean {
-        val serverUrlVal = serverConfigDao.getServerConfigSync()?.serverUrl
-        val token = authPreferences.authToken.first()
+        val config = appConfigDao.getConfigSync()
+        val serverUrlVal = config?.serverUrl
+        val token = config?.authToken
         
         if (!serverUrlVal.isNullOrEmpty() && !token.isNullOrEmpty()) {
             ApiClient.getClient(serverUrlVal)
@@ -76,8 +79,10 @@ class AuthRepository(
     }
 
     suspend fun logout() {
-        authPreferences.clearSession()
-        serverConfigDao.deleteConfig()
+        val config = appConfigDao.getConfigSync()
+        if (config != null) {
+            appConfigDao.insertConfig(config.copy(authToken = null, rawKey = null))
+        }
         ApiClient.updateAuthToken(null)
     }
 }

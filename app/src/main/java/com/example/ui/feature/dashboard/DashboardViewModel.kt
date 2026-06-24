@@ -1,8 +1,9 @@
 package com.example.ui.feature.dashboard
 
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.local.FilterState
+import com.example.data.local.FilterStateDao
 import com.example.data.remote.ApiClient
 import com.example.data.remote.Bookmark
 import com.example.data.remote.BookmarkCreateRequest
@@ -41,7 +42,7 @@ sealed interface DashboardState {
 
 class DashboardViewModel(
     private val authRepository: AuthRepository,
-    private val prefs: SharedPreferences
+    private val filterStateDao: FilterStateDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DashboardState>(DashboardState.Loading)
@@ -78,51 +79,65 @@ class DashboardViewModel(
     private var loadJob: kotlinx.coroutines.Job? = null
 
     init {
-        loadFilterState(selectedFilter, selectedFolderId)
-        loadBookmarks(reset = true)
         viewModelScope.launch {
+            loadFilterState(selectedFilter, selectedFolderId)
+            loadBookmarks(reset = true)
             authRepository.sessionRefreshed.collect {
                 loadBookmarks(reset = true)
             }
         }
     }
 
-    private fun saveFilterState() {
+    private suspend fun saveFilterState() {
         val prefix = if (selectedFolderId != null) "folder_$selectedFolderId" else "tab_$selectedFilter"
-        prefs.edit()
-            .putBoolean("${prefix}_filterStarred", filterStarred)
-            .putBoolean("${prefix}_filterPinned", filterPinned)
-            .putBoolean("${prefix}_filterArchived", filterArchived)
-            .putString("${prefix}_tagFilter", tagFilter)
-            .putString("${prefix}_sortBy", sortBy)
-            .apply()
+        filterStateDao.saveFilterState(FilterState(
+            contextKey = prefix,
+            filterStarred = filterStarred,
+            filterPinned = filterPinned,
+            filterArchived = filterArchived,
+            tagFilter = tagFilter,
+            sortBy = sortBy
+        ))
     }
 
-    private fun loadFilterState(newFilter: String, newFolderId: String?) {
+    private suspend fun loadFilterState(newFilter: String, newFolderId: String?) {
         val prefix = if (newFolderId != null) "folder_$newFolderId" else "tab_$newFilter"
-        filterStarred = prefs.getBoolean("${prefix}_filterStarred", false)
-        filterPinned = prefs.getBoolean("${prefix}_filterPinned", false)
-        filterArchived = prefs.getBoolean("${prefix}_filterArchived", false)
-        tagFilter = prefs.getString("${prefix}_tagFilter", null)
-        sortBy = prefs.getString("${prefix}_sortBy", "date-desc") ?: "date-desc"
+        val state = filterStateDao.getFilterState(prefix)
+        if (state != null) {
+            filterStarred = state.filterStarred
+            filterPinned = state.filterPinned
+            filterArchived = state.filterArchived
+            tagFilter = state.tagFilter
+            sortBy = state.sortBy
+        } else {
+            filterStarred = false
+            filterPinned = false
+            filterArchived = false
+            tagFilter = null
+            sortBy = "date-desc"
+        }
     }
 
     fun setFilter(filter: String) {
         if (selectedFilter == filter && selectedFolderId == null) return
-        saveFilterState()
-        selectedFilter = filter
-        selectedFolderId = null
-        loadFilterState(selectedFilter, selectedFolderId)
-        loadBookmarks(reset = true)
+        viewModelScope.launch {
+            saveFilterState()
+            selectedFilter = filter
+            selectedFolderId = null
+            loadFilterState(selectedFilter, selectedFolderId)
+            loadBookmarks(reset = true)
+        }
     }
 
     fun selectFolder(folderId: String?) {
         if (selectedFolderId == folderId) return
-        saveFilterState()
-        selectedFolderId = folderId
-        selectedFilter = "all" // reset to all when inside folder
-        loadFilterState(selectedFilter, selectedFolderId)
-        loadBookmarks(reset = true)
+        viewModelScope.launch {
+            saveFilterState()
+            selectedFolderId = folderId
+            selectedFilter = "all" // reset to all when inside folder
+            loadFilterState(selectedFilter, selectedFolderId)
+            loadBookmarks(reset = true)
+        }
     }
 
     fun setSearchQuery(query: String) {
@@ -134,22 +149,28 @@ class DashboardViewModel(
     fun setSortBy(sort: String) {
         if (sortBy == sort) return
         sortBy = sort
-        saveFilterState()
-        updateUIState() // sorting is local
+        viewModelScope.launch {
+            saveFilterState()
+            updateUIState() // sorting is local
+        }
     }
 
     fun setFilterStatus(starred: Boolean, pinned: Boolean, archived: Boolean) {
         filterStarred = starred
         filterPinned = pinned
         filterArchived = archived
-        saveFilterState()
-        loadBookmarks(reset = true)
+        viewModelScope.launch {
+            saveFilterState()
+            loadBookmarks(reset = true)
+        }
     }
 
     fun setTagFilter(tag: String?) {
         tagFilter = tag
-        saveFilterState()
-        loadBookmarks(reset = true)
+        viewModelScope.launch {
+            saveFilterState()
+            loadBookmarks(reset = true)
+        }
     }
 
     private fun updateUIState(forceLoadingMoreFalse: Boolean = false) {

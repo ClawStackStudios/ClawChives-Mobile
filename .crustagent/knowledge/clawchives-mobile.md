@@ -524,7 +524,7 @@ class ClawChivesClient(
 When scaffolding the Android client app, the code generator agent MUST strictly follow these rules:
 
 1. **Cleartext Traffic Policy:** If the server is private HTTP over LAN, the agent must generate a `res/xml/network_security_config.xml` file whitelist allowing private domains/IP ranges (`192.168.0.0/16`, `10.0.0.0/8`), rather than globally enabling cleartext traffic (`cleartextTrafficPermitted="true"` on all domains).
-2. **Encrypted Storage:** The `api-` session token represents active user authorization and must **never** be stored in cleartext XML SharedPreferences. Instruct the agent to use Jetpack's `EncryptedSharedPreferences` for token persistence.
+2. **Encrypted Storage:** The `api-` session token represents active user authorization and must **never** be stored in cleartext XML SharedPreferences. Instruct the agent to use Jetpack's `Room` database for unified, encapsulated configuration persistence.
 3. **Graceful Revocation (401 Handler):** The Ktor client should be set up with an HTTP interceptor or custom exception handling that intercepts `HttpStatusCode.Unauthorized` (401), automatically flushes the local encrypted storage, and forces a redirect to the App's Login screen to prevent silent failures.
 
 ---

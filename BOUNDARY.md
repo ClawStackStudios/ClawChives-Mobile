@@ -53,7 +53,7 @@ To keep the client lightweight, it must not maintain long-running credentials in
 
 1. **Client-side Hash**: The plaintext `hu-` human key never crosses the boundaries. It is locally `SHA-256` hashed using `ClawCrypto` on the app side.
 2. **Ephemeral Exchange**: The server boundaries answer the key with a `Bearer` API Session Key (`api-`).
-3. **Persisted Key**: The actual master key is only saved entirely locally on the device's hardware-backed Encrypted SharedPreferences if requested by the user. 
+3. **Persisted Key**: The actual master key is only saved entirely locally on the device's hardware-backed local application configuration (Room Database) if requested by the user. 
 4. **Compatibility Check**: Any update to the `POST /api/auth/token` system must ensure backwards-compatibility payload properties indefinitely.
 
 ---

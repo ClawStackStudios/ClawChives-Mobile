@@ -11,7 +11,7 @@ ClawChives is a client application designed to connect to your own self-hosted o
 **We do not collect, harvest, or monetize your personal data.** 
 Because ClawChives Mobile is a sovereign client, there are no third-party trackers, no hidden analytics SDKs, and no telemetry systems phoning home to us. 
 
-* **Server Configuration & Authentication:** The app stores your server URL, Session Tokens, and ClawKeys securely on your local device using Android's native `Room` database and `EncryptedSharedPreferences`. 
+* **Server Configuration & Authentication:** The app stores your server URL, Session Tokens, and ClawKeys securely on your local device using Android's native `Room` database. 
 * **User Content (Pinchmarks, Folders, Profile):** Your bookmarks (Pinchmarks), folder structures, and profile settings are transmitted directly between your mobile device and your configured ClawChives server via HTTPS. 
 * **Local Caching:** For offline access and performance, the app caches a synchronized copy of your data locally on your device. This data never leaves your device except to sync with your chosen server.
 

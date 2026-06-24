@@ -91,6 +91,7 @@ fun ClawChivesApp(
   val context = LocalContext.current
   val app = context.applicationContext as ClawChivesApplication
   val authRepository = app.authRepository
+  val filterStateDao = app.database.filterStateDao()
   val scope = androidx.compose.runtime.rememberCoroutineScope()
   val toastState = androidx.compose.runtime.remember { com.example.ui.components.ToastState(scope) }
 
@@ -142,10 +143,8 @@ fun ClawChivesApp(
               }
             }
             composable("dashboard") {
-              val context = LocalContext.current
-              val prefs = remember { context.applicationContext.getSharedPreferences("dashboard_prefs", android.content.Context.MODE_PRIVATE) }
               val dashboardViewModel: DashboardViewModel = viewModel(
-                factory = DashboardViewModelFactory(authRepository, prefs)
+                factory = DashboardViewModelFactory(authRepository, filterStateDao)
               )
 
               DashboardScreen(
