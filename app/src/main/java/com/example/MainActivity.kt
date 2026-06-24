@@ -46,14 +46,24 @@ class MainActivity : ComponentActivity() {
     handleIntent(intent)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme {
-        ClawChivesApp(
-            sharedUrlFlow = sharedUrlState,
-            onSharedUrlConsumed = { 
-                sharedUrlState.value = null 
-                intent.removeExtra(Intent.EXTRA_TEXT)
-            }
-        )
+      val app = applicationContext as ClawChivesApplication
+      val initialTheme = app.themePreferences.theme
+
+      com.example.ui.theme.ThemeCircularRevealProvider(initialTheme = initialTheme) { theme, setTheme ->
+          androidx.compose.runtime.CompositionLocalProvider(
+              com.example.ui.theme.LocalThemeState provides com.example.ui.theme.ThemeState(theme) { newTheme, offset ->
+                  app.themePreferences.theme = newTheme
+                  setTheme(newTheme, offset)
+              }
+          ) {
+              ClawChivesApp(
+                  sharedUrlFlow = sharedUrlState,
+                  onSharedUrlConsumed = { 
+                      sharedUrlState.value = null 
+                      intent.removeExtra(Intent.EXTRA_TEXT)
+                  }
+              )
+          }
       }
     }
   }
@@ -82,68 +92,77 @@ fun ClawChivesApp(
   val app = context.applicationContext as ClawChivesApplication
   val authRepository = app.authRepository
   val scope = androidx.compose.runtime.rememberCoroutineScope()
+  val toastState = androidx.compose.runtime.remember { com.example.ui.components.ToastState(scope) }
 
   val navController = rememberNavController()
   
-  androidx.compose.runtime.LaunchedEffect(Unit) {
-      com.example.data.remote.ApiClient.onUnauthorizedCallback = {
-          scope.launch {
-              val reauthSuccess = authRepository.attemptAutoReauth()
-              if (!reauthSuccess) {
-                  authRepository.logout()
-                  val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-                  mainHandler.post {
-                      navController.navigate("gateway") {
-                          popUpTo(0) { inclusive = true }
+  androidx.compose.runtime.CompositionLocalProvider(
+      com.example.ui.components.LocalToastState provides toastState
+  ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+          androidx.compose.runtime.LaunchedEffect(Unit) {
+              com.example.data.remote.ApiClient.onUnauthorizedCallback = {
+                  scope.launch {
+                      val reauthSuccess = authRepository.attemptAutoReauth()
+                      if (!reauthSuccess) {
+                          authRepository.logout()
+                          val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                          mainHandler.post {
+                              navController.navigate("gateway") {
+                                  popUpTo(0) { inclusive = true }
+                              }
+                          }
                       }
                   }
               }
           }
-      }
-  }
-  
-  NavHost(
-    navController = navController,
-    startDestination = "gateway"
-  ) {
-    composable("gateway") {
-      val gatewayViewModel: GatewayViewModel = viewModel(
-        factory = GatewayViewModelFactory(authRepository)
-      )
+          
+          NavHost(
+            navController = navController,
+            startDestination = "gateway"
+          ) {
+            composable("gateway") {
+              val gatewayViewModel: GatewayViewModel = viewModel(
+                factory = GatewayViewModelFactory(authRepository)
+              )
 
-      Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.safeDrawing
-      ) { innerPadding ->
-        GatewayScreen(
-          viewModel = gatewayViewModel,
-          modifier = Modifier.padding(innerPadding),
-          onLoginSuccess = {
-            navController.navigate("dashboard") {
-              popUpTo("gateway") { inclusive = true }
+              Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                contentWindowInsets = WindowInsets.safeDrawing
+              ) { innerPadding ->
+                GatewayScreen(
+                  viewModel = gatewayViewModel,
+                  modifier = Modifier.padding(innerPadding),
+                  onLoginSuccess = {
+                    navController.navigate("dashboard") {
+                      popUpTo("gateway") { inclusive = true }
+                    }
+                  }
+                )
+              }
+            }
+            composable("dashboard") {
+              val context = LocalContext.current
+              val prefs = remember { context.applicationContext.getSharedPreferences("dashboard_prefs", android.content.Context.MODE_PRIVATE) }
+              val dashboardViewModel: DashboardViewModel = viewModel(
+                factory = DashboardViewModelFactory(authRepository, prefs)
+              )
+
+              DashboardScreen(
+                viewModel = dashboardViewModel,
+                sharedUrlFlow = sharedUrlFlow,
+                onSharedUrlConsumed = onSharedUrlConsumed,
+                onLogout = {
+                  navController.navigate("gateway") {
+                    popUpTo("dashboard") { inclusive = true }
+                  }
+                }
+              )
             }
           }
-        )
+          
+          com.example.ui.components.ToastHost(toastState = toastState)
       }
-    }
-    composable("dashboard") {
-      val context = LocalContext.current
-      val prefs = remember { context.applicationContext.getSharedPreferences("dashboard_prefs", android.content.Context.MODE_PRIVATE) }
-      val dashboardViewModel: DashboardViewModel = viewModel(
-        factory = DashboardViewModelFactory(authRepository, prefs)
-      )
-
-      DashboardScreen(
-        viewModel = dashboardViewModel,
-        sharedUrlFlow = sharedUrlFlow,
-        onSharedUrlConsumed = onSharedUrlConsumed,
-        onLogout = {
-          navController.navigate("gateway") {
-            popUpTo("dashboard") { inclusive = true }
-          }
-        }
-      )
-    }
   }
 }
 

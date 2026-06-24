@@ -240,6 +240,12 @@ class DashboardViewModel(
                 val token = ApiClient.authToken ?: throw Exception("Not logged in")
                 
                 if (reset) {
+                    // Clear cached state to prevent ghost tags from previous server connection
+                    cachedFolders = emptyList()
+                    cachedTags = emptyList()
+                    cachedTagsCount = 0
+                    cachedStats = null
+
                     val foldersResult = client.fetchFolders(token)
                     if (foldersResult.isSuccess) {
                         cachedFolders = foldersResult.getOrThrow()

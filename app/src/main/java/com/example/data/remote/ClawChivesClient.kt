@@ -253,8 +253,7 @@ class ClawChivesClient(
             }
 
             if (response.status == HttpStatusCode.OK) {
-                val tagsRes = response.body<TagsResponse>()
-                tagsRes.data
+                response.body<List<String>>()
             } else {
                 throw Exception("Fetch tags failed: ${response.status.value}")
             }

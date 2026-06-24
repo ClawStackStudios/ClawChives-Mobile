@@ -58,9 +58,9 @@ Add a user profile feature to the ClawChives companion app. Users should be able
 > Success Criteria: A functional settings menu skeleton, with working sidebar selections [Sidebar Top: Profile, Appearance, Lobster Keys, Import / Export, Back to Dashboard, Database Stats, Claw Out - Sidebar Bottom] and a navigateable 'Profile' view from the sidebar (Only the 'Profile' selection will have an view for this task, the sidebar entries will be added to the sidebar. but the views will be in subsequent tasks in the phase) 
 All Functions and variables in the provided screenshot when assuming this task on user request must be faithfully recreated and functional. 
 
-- [ ]  Task 02: Implement Push Notifications
+- [X]  Task 02: Implement Push Notifications
 
-Description: Implement push notification functionality for the ClawChives mobile companion app. Integrate with a service like CaraBase SQL Server or Expo Push Notifications to send alerts for security events (e.g., new logins) and other important system updates.
+Description: Implement a toast notification system to display errors or connectivity feedback when communication with the ClawChives server fails.
 
 > Success Criteria: [Clear, binary conditions that determine when this task can be marked complete.]
 
@@ -171,6 +171,20 @@ Description: [Detailed explanation of what needs to be built, the technical requ
 
 > Success Criteria: [Clear, binary conditions that determine when this task can be marked complete.]
 
+## Completed Tasks
+
+- [x] Add a slide-in entrance animation for the new settings menu when opened from the sidebar to provide a smoother, more cohesive UI experience.
+
+- [x] Add a fourth option to the theme split button that syncs with the user's OS-level light/dark mode settings, automatically switching themes based on system preferences.
+
+- [x] Implement persistent storage for the selected theme (light, dark, or oled) using localStorage so the user's preference is maintained across sessions and app restarts.
+
+- [x] Add an 'About' section to the new settings menu that displays the app version and connectivity status, using the existing diagnostic functions to verify server parity.
+
+- [x] Implement a toast notification system to display errors or connectivity feedback when communication with the ClawChives server fails.
+
+- [x] Persist the server URL that is entered in the login form locally using Android native Room Library, replacing the SharedPreferences configuration.
+
 
 # TESTING IDEAS DO NOT IMPLEMENT
 
@@ -191,3 +205,9 @@ The system should be able to send notifications for events like new agent key ge
 - [ ] Implement haptic vibration feedback for the central '+' button and the bottom navigation elements to match standard Android interaction patterns.
 
 - [ ] Integrate the Google Search grounding capability to allow users to pull in fresh metadata or status information for their ClawChives server items directly from the web.
+
+## EXPERIMENTAL IDEAS
+
+- [ ] Implement push notification functionality for the ClawChives mobile companion app. Integrate with a service like CaraBase SQL Server or Expo Push Notifications to send alerts for security events (e.g., new logins) and other important system updates.
+
+- [ ] 

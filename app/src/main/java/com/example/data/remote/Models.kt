@@ -86,7 +86,8 @@ fun BookmarkCreateRequest.sanitize(): BookmarkCreateRequest {
         color = if (color.isNullOrBlank()) null else color,
         jinaUrl = if (jinaUrl.isNullOrBlank()) null else jinaUrl,
         starred = starred ?: false,
-        archived = archived ?: false
+        archived = archived ?: false,
+        tags = tags.map { it.trim() }.filter { it.isNotEmpty() }
     )
 }
 
@@ -131,7 +132,8 @@ fun BookmarkUpdateRequest.sanitize(): BookmarkUpdateRequest {
         color = if (color.isNullOrBlank()) null else color,
         jinaUrl = if (jinaUrl.isNullOrBlank()) null else jinaUrl,
         starred = starred ?: false,
-        archived = archived ?: false
+        archived = archived ?: false,
+        tags = tags?.map { it.trim() }?.filter { it.isNotEmpty() }
     )
 }
 

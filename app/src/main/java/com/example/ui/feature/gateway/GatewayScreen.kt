@@ -184,9 +184,13 @@ fun GatewayScreen(
   }
 
   // Auto-navigate on successful session load or login
+  val toastState = com.example.ui.components.LocalToastState.current
   androidx.compose.runtime.LaunchedEffect(uiState) {
       if (uiState is GatewayUiState.Success) {
           onLoginSuccess()
+      } else if (uiState is GatewayUiState.Error) {
+          val errorState = uiState as GatewayUiState.Error
+          toastState.show(errorState.message, isError = true)
       }
   }
 
@@ -558,14 +562,6 @@ fun GatewayScreen(
     }
 
     Spacer(modifier = Modifier.weight(1f))
-
-    if (uiState is GatewayUiState.Error) {
-      Text(
-          text = (uiState as GatewayUiState.Error).message,
-          color = MaterialTheme.colorScheme.error,
-          modifier = Modifier.padding(bottom = 16.dp)
-      )
-    }
 
     val isFormValid = if (isUploadMode) {
         uploadedKey != null

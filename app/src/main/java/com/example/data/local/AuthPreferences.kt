@@ -19,23 +19,14 @@ class AuthPreferences(context: Context) {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    private val SERVER_URL = "server_url"
     private val AUTH_TOKEN = "auth_token"
     private val RAW_KEY = "raw_key"
-
-    private val _serverUrl = MutableStateFlow(sharedPreferences.getString(SERVER_URL, null))
-    val serverUrl: Flow<String?> = _serverUrl.asStateFlow()
 
     private val _authToken = MutableStateFlow(sharedPreferences.getString(AUTH_TOKEN, null))
     val authToken: Flow<String?> = _authToken.asStateFlow()
 
     private val _rawKey = MutableStateFlow(sharedPreferences.getString(RAW_KEY, null))
     val rawKey: Flow<String?> = _rawKey.asStateFlow()
-
-    suspend fun saveServerUrl(url: String) {
-        sharedPreferences.edit().putString(SERVER_URL, url).apply()
-        _serverUrl.value = url
-    }
 
     suspend fun saveAuthToken(token: String) {
         sharedPreferences.edit().putString(AUTH_TOKEN, token).apply()
@@ -54,7 +45,6 @@ class AuthPreferences(context: Context) {
     }
 
     // Helper synchronous getters for immediate access
-    fun getServerUrlSync(): String? = sharedPreferences.getString(SERVER_URL, null)
     fun getAuthTokenSync(): String? = sharedPreferences.getString(AUTH_TOKEN, null)
     fun getRawKeySync(): String? = sharedPreferences.getString(RAW_KEY, null)
 }

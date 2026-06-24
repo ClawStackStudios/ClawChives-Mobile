@@ -31,12 +31,29 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = Color(0xFFE2E8F0)
 )
 
+private val OledColorScheme = darkColorScheme(
+    primary = CyanAccent,
+    secondary = RedAccent,
+    background = Color.Black,
+    surface = Color(0xFF0A0A0A), // Very dark gray for surface
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onBackground = LightText,
+    onSurface = LightText,
+    surfaceVariant = Color(0xFF1A1A1A)
+)
+
 @Composable
 fun MyApplicationTheme(
-  darkTheme: Boolean = isSystemInDarkTheme(),
+  theme: AppTheme = AppTheme.DARK,
   content: @Composable () -> Unit,
 ) {
-  val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+  val colorScheme = when (theme) {
+      AppTheme.SYSTEM -> if (isSystemInDarkTheme()) DarkColorScheme else LightColorScheme
+      AppTheme.LIGHT -> LightColorScheme
+      AppTheme.DARK -> DarkColorScheme
+      AppTheme.OLED -> OledColorScheme
+  }
 
   MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
 }

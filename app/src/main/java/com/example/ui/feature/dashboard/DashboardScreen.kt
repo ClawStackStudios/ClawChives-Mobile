@@ -86,6 +86,7 @@ fun DashboardScreen(
     var podToEdit by remember { mutableStateOf<Folder?>(null) }
     var bookmarkToEdit by remember { mutableStateOf<Bookmark?>(null) }
     val context = LocalContext.current
+    val toastState = com.example.ui.components.LocalToastState.current
     val sharedUrl by sharedUrlFlow.collectAsStateWithLifecycle(initialValue = null)
 
     val activeFilter = (uiState as? DashboardState.Success)?.selectedFilter ?: "all"
@@ -94,6 +95,8 @@ fun DashboardScreen(
     val folders = (uiState as? DashboardState.Success)?.folders ?: emptyList()
     val stats = (uiState as? DashboardState.Success)?.stats
     val tagsCount = (uiState as? DashboardState.Success)?.tagsCount ?: 0
+
+    var showSettingsMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
@@ -134,10 +137,10 @@ fun DashboardScreen(
                         showAddDialog = false
                         bookmarkToEdit = null
                         if (sharedUrl != null) onSharedUrlConsumed()
-                        Toast.makeText(context, "Pinchmark added!", Toast.LENGTH_SHORT).show()
+                        toastState.show("Pinchmark added!")
                     },
                     onError = { error ->
-                        Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        toastState.show("Error: $error", isError = true)
                     }
                 )
             },
@@ -148,10 +151,10 @@ fun DashboardScreen(
                     onSuccess = {
                         showAddDialog = false
                         bookmarkToEdit = null
-                        Toast.makeText(context, "Pinchmark updated!", Toast.LENGTH_SHORT).show()
+                        toastState.show("Pinchmark updated!")
                     },
                     onError = { error ->
-                        Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        toastState.show("Error: $error", isError = true)
                     }
                 )
             }
@@ -177,10 +180,10 @@ fun DashboardScreen(
                         onSuccess = {
                             showPodEditDialog = false
                             podToEdit = null
-                            Toast.makeText(context, "Pod '$name' updated!", Toast.LENGTH_SHORT).show()
+                            toastState.show("Pod '$name' updated!")
                         },
                         onError = { error ->
-                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                            toastState.show("Error: $error", isError = true)
                         }
                     )
                 } else {
@@ -190,10 +193,10 @@ fun DashboardScreen(
                         onSuccess = {
                             showPodEditDialog = false
                             podToEdit = null
-                            Toast.makeText(context, "Pod '$name' created!", Toast.LENGTH_SHORT).show()
+                            toastState.show("Pod '$name' created!")
                         },
                         onError = { error ->
-                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                            toastState.show("Error: $error", isError = true)
                         }
                     )
                 }
@@ -205,10 +208,10 @@ fun DashboardScreen(
                         onSuccess = {
                             showPodEditDialog = false
                             podToEdit = null
-                            Toast.makeText(context, "Pod deleted!", Toast.LENGTH_SHORT).show()
+                            toastState.show("Pod deleted!")
                         },
                         onError = { error ->
-                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                            toastState.show("Error: $error", isError = true)
                         }
                     )
                 }
@@ -216,14 +219,15 @@ fun DashboardScreen(
         )
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.width(300.dp)
-            ) {
-                // 1. Logo Brand Area
+    Box(modifier = Modifier.fillMaxSize()) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                    drawerContainerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.width(300.dp)
+                ) {
+                    // 1. Logo Brand Area
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -318,18 +322,20 @@ fun DashboardScreen(
                     )
 
                     // Tags
-                    DrawerNavItem(
-                        icon = { Icon(Icons.Default.Favorite, contentDescription = null, tint = if (activeFilter == "tags" && activeFolderId == null) Color(0xFF0284C7) else MutedText) },
-                        label = "Tags",
-                        badgeValue = tagsCount,
-                        selected = activeFilter == "tags" && activeFolderId == null,
-                        activeBgColor = Color(0x1F0284C7),
-                        activeTextColor = Color(0xFF0284C7),
-                        onClick = {
-                            viewModel.setFilter("tags")
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    if (tagsCount > 0) {
+                        DrawerNavItem(
+                            icon = { Icon(Icons.Default.Favorite, contentDescription = null, tint = if (activeFilter == "tags" && activeFolderId == null) Color(0xFF0284C7) else MutedText) },
+                            label = "Tags",
+                            badgeValue = tagsCount,
+                            selected = activeFilter == "tags" && activeFolderId == null,
+                            activeBgColor = Color(0x1F0284C7),
+                            activeTextColor = Color(0xFF0284C7),
+                            onClick = {
+                                viewModel.setFilter("tags")
+                                scope.launch { drawerState.close() }
+                            }
+                        )
+                    }
 
                     // Archived
                     DrawerNavItem(
@@ -440,6 +446,7 @@ fun DashboardScreen(
                         label = { Text("Settings", fontWeight = FontWeight.Bold) },
                         selected = false,
                         onClick = {
+                            showSettingsMenu = true
                             scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
@@ -512,7 +519,7 @@ fun DashboardScreen(
                     val hasActiveFilters = currentState.filterStarred || currentState.filterPinned || currentState.filterArchived || currentState.tagFilter != null
                     CustomBottomBarWithHump(
                         onViewClick = { showViewBottomSheet = true },
-                        onRightClick = { /* Settings Placeholder */ },
+                        onRightClick = { showSettingsMenu = true },
                         onAddClick = { 
                             bookmarkToEdit = null
                             showAddDialog = true 
@@ -582,7 +589,7 @@ fun DashboardScreen(
                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(bookmark.url))
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
-                                            Toast.makeText(context, "Invalid URL", Toast.LENGTH_SHORT).show()
+                                            toastState.show("Invalid URL", isError = true)
                                         }
                                     }
                                 )
@@ -607,10 +614,16 @@ fun DashboardScreen(
                     }
                 }
             }
-        }
-    }
-    }
-}
+        } // ends Box inside Scaffold
+        } // ends Scaffold trailing lambda
+    } // ends ModalNavigationDrawer trailing lambda
+        
+    SettingsMenu(
+        visible = showSettingsMenu,
+        onDismiss = { showSettingsMenu = false }
+    )
+    } // ends root Box
+} // ends DashboardScreen
 
 @Composable
 fun PinchmarkCard(
@@ -877,7 +890,7 @@ fun ViewOptionsBottomSheet(
                 }
                 if (state.filterArchived) Icon(Icons.Default.Check, contentDescription = null, tint = CyanAccent)
             }
-
+            
             if (state.allTags.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text("TAGS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = MutedText)
