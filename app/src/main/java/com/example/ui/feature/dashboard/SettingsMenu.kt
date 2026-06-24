@@ -138,7 +138,7 @@ fun AboutSection() {
             .padding(16.dp)
     ) {
         Text(text = "ClawChives Mobile", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
-        Text(text = "Version 1.0.0", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
+        Text(text = "Version ${com.example.BuildConfig.VERSION_NAME}", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
 
         Spacer(modifier = Modifier.height(16.dp))
 

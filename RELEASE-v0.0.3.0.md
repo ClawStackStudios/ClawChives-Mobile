@@ -1,6 +1,6 @@
 ---
 
-# 🦞 ClawChives — Release v0.3.0
+# 🦞 ClawChives — Release v0.0.3.0
 
 ## *The Personalization & Persistence Molt*
 
@@ -24,7 +24,7 @@
 
 ## 🚀 The Core Summary
 
-Welcome to **v0.3.0** of **ClawChives**! This release introduces robust personalization and foundational persistence upgrades. We have rolled out a comprehensive **Settings Menu** with a responsive slide-in animation, enabled **OS-level Theme Synchronization** with resilient state persistence, integrated a global **Toast Notification System** for streamlined user feedback, and upgraded our local configuration architecture to use the **Room Database** for enduring server configurations.
+Welcome to **v0.0.3.0** of **ClawChives**! This release introduces robust personalization and foundational persistence upgrades. We have rolled out a comprehensive **Settings Menu** with a responsive slide-in animation, enabled **OS-level Theme Synchronization** with resilient state persistence, integrated a global **Toast Notification System** for streamlined user feedback, and upgraded our local configuration architecture to use the **Room Database** for enduring server configurations.
 
 ---
 
@@ -87,7 +87,7 @@ Strengthening our persistence layer to lay the groundwork for advanced offline c
 
 ---
 
-## 📋 Commit Ledger (Since `v0.2.0`)
+## 📋 Commit Ledger (Since `v0.0.2.0`)
 
 * `[commit_hash]` — **feat:** implement responsive Settings Menu with slide-in animations
 * `[commit_hash]` — **feat:** add OS-level System Theme sync and 4-way theme selector
