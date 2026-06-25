@@ -21,9 +21,14 @@ class RoomSettingsRepository(
         .distinctUntilChanged()
 
     override suspend fun saveServerUrl(url: String) {
+        require(url.isNotBlank()) { "Server URL cannot be blank" }
+        require(url.startsWith("http://") || url.startsWith("https://")) { "Server URL must start with http:// or https://" }
+        
+        val normalizedUrl = url.trimEnd('/')
+
         withContext(Dispatchers.IO) {
             val config = appConfigDao.getConfigSync() ?: AppConfig()
-            appConfigDao.insertConfig(config.copy(serverUrl = url))
+            appConfigDao.insertConfig(config.copy(serverUrl = normalizedUrl))
         }
     }
 

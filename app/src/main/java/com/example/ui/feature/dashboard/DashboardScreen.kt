@@ -25,6 +25,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -563,52 +566,71 @@ fun DashboardScreen(
                     }
                 }
                 is DashboardState.Success -> {
-                    if (state.bookmarks.isEmpty()) {
-                        Text(
-                            text = "Your reef is empty.",
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    } else {
-                        LazyColumn(
-                            state = listState,
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(
-                                items = state.bookmarks,
-                                key = { it.id }
-                            ) { bookmark ->
-                                PinchmarkCard(
-                                    bookmark = bookmark,
-                                    onLongPress = {
-                                        bookmarkToEdit = bookmark
-                                        showAddDialog = true
-                                    },
-                                    onClick = {
-                                        try {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(bookmark.url))
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            toastState.show("Invalid URL", isError = true)
-                                        }
-                                    }
+                    val pullRefreshState = rememberPullToRefreshState()
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = { viewModel.loadBookmarks(reset = true, isSwipeRefresh = true) },
+                        state = pullRefreshState,
+                        modifier = Modifier.fillMaxSize(),
+                        indicator = {
+                            PullToRefreshDefaults.Indicator(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                isRefreshing = state.isRefreshing,
+                                state = pullRefreshState,
+                                color = CyanAccent,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
+                    ) {
+                        if (state.bookmarks.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                                Text(
+                                    text = "Your reef is empty. Pull to refresh.",
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                                    modifier = Modifier.align(Alignment.Center)
                                 )
                             }
+                        } else {
+                            LazyColumn(
+                                state = listState,
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(
+                                    items = state.bookmarks,
+                                    key = { it.id }
+                                ) { bookmark ->
+                                    PinchmarkCard(
+                                        bookmark = bookmark,
+                                        onLongPress = {
+                                            bookmarkToEdit = bookmark
+                                            showAddDialog = true
+                                        },
+                                        onClick = {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(bookmark.url))
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                toastState.show("Invalid URL", isError = true)
+                                            }
+                                        }
+                                    )
+                                }
 
-                            if (state.isLoadingMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = CyanAccent
-                                        )
+                                if (state.isLoadingMore) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = CyanAccent
+                                            )
+                                        }
                                     }
                                 }
                             }

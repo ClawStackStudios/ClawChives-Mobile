@@ -362,6 +362,8 @@ class ClawChivesPushReceiver : UnifiedPushReceiver() {
 > 
 >
 
+- [ ] Implement a settings page where users can toggle push notifications for specific server events, persisting these preferences locally.
+
 ---
 
 ## Completed Tasks
@@ -389,7 +391,7 @@ class ClawChivesPushReceiver : UnifiedPushReceiver() {
 
 - [ ] Integrate HapticFeedbackConstants into the main interactive buttons (the 'Pinchmark' and 'Pod' actions) to provide subtle, premium physical confirmation for user interactions.
 
-- [ ] Add a small visual indicator (like a colored dot) to the bottom navigation bar to signal active server connection status in real-time.
+- [ ] Add a persistent status indicator in the header that displays 'Online' or 'Offline' based on a periodic ping to the configured server URL.
 
 - [ ] Implement haptic vibration feedback for the central '+' button and the bottom navigation elements to match standard Android interaction patterns.
 
@@ -408,6 +410,10 @@ class ClawChivesPushReceiver : UnifiedPushReceiver() {
 - [ ] Integrate the Google Search grounding capability to allow users to pull in fresh metadata or status information for their ClawChives server items directly from the web. consider a new button for triggering this 're-fetch' in the edit pinchmark modal activity, or possibly in the 'Gear' button to the right of the Cyan + button (since we already have the correct setting button leading to the settings menu in the sidebar. This gear button i was originally leaving as a placeholder for something exactly like this. We need a way of handling the state of 'Re-fetch ALL pinchmarks? or just granular? ie.single tag, single category. single pinchmark? we would need a possible new menu for selection status? the flow gets complicated. so we need to surface tensions in the coherent, smooth flow that makes sense and grounds in the logical inferred patterns this flow would include.)
 
 ## EXPERIMENTAL IDEAS
+
+- [ ] Create a scrollable view that pulls and displays the latest server log lines from the configured API endpoint with auto-scrolling functionality.
+
+- [ ] Create a status dashboard component that displays real-time server health metrics such as latency, uptime, and current load using a Recharts line graph.
 
 - [ ] Build a background service that fetches and synchronizes notes from the configured ClawChives server.
 

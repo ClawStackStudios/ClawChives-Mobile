@@ -35,7 +35,8 @@ sealed interface DashboardState {
         val tagFilter: String? = null,
         val allTags: List<String> = emptyList(),
         val isLoadingMore: Boolean = false,
-        val isLastPage: Boolean = false
+        val isLastPage: Boolean = false,
+        val isRefreshing: Boolean = false
     ) : DashboardState
     data class Error(val message: String) : DashboardState
 }
@@ -230,11 +231,12 @@ class DashboardViewModel(
             tagFilter = tagFilter,
             allTags = cachedTags,
             isLoadingMore = if (forceLoadingMoreFalse) false else (currentState?.isLoadingMore ?: false),
-            isLastPage = isLastPage
+            isLastPage = isLastPage,
+            isRefreshing = false
         )
     }
 
-    fun loadBookmarks(reset: Boolean = true) {
+    fun loadBookmarks(reset: Boolean = true, isSwipeRefresh: Boolean = false) {
         if (isCurrentlyLoading && !reset) return
         if (!reset && isLastPage) return
 
@@ -247,8 +249,15 @@ class DashboardViewModel(
             if (reset) {
                 currentPage = 1
                 isLastPage = false
-                loadedBookmarks.clear()
-                _uiState.value = DashboardState.Loading
+                if (!isSwipeRefresh) {
+                    loadedBookmarks.clear()
+                    _uiState.value = DashboardState.Loading
+                } else {
+                    val currentState = _uiState.value
+                    if (currentState is DashboardState.Success) {
+                        _uiState.value = currentState.copy(isRefreshing = true)
+                    }
+                }
             } else {
                 val currentState = _uiState.value
                 if (currentState is DashboardState.Success) {
@@ -319,8 +328,13 @@ class DashboardViewModel(
 
                     updateUIState(forceLoadingMoreFalse = true)
                 } else {
-                    if (reset) {
+                    if (reset && !isSwipeRefresh) {
                         _uiState.value = DashboardState.Error(result.exceptionOrNull()?.message ?: "Failed to load bookmarks")
+                    } else if (reset && isSwipeRefresh) {
+                        val currentState = _uiState.value
+                        if (currentState is DashboardState.Success) {
+                            _uiState.value = currentState.copy(isRefreshing = false)
+                        }
                     } else {
                         val currentState = _uiState.value
                         if (currentState is DashboardState.Success) {
@@ -329,8 +343,13 @@ class DashboardViewModel(
                     }
                 }
             } catch (e: Exception) {
-                if (reset) {
+                if (reset && !isSwipeRefresh) {
                     _uiState.value = DashboardState.Error(e.message ?: "Failed to load bookmarks")
+                } else if (reset && isSwipeRefresh) {
+                    val currentState = _uiState.value
+                    if (currentState is DashboardState.Success) {
+                        _uiState.value = currentState.copy(isRefreshing = false)
+                    }
                 } else {
                     val currentState = _uiState.value
                     if (currentState is DashboardState.Success) {
