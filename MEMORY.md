@@ -12,3 +12,6 @@ This keeps my memory compact and resilient against signal to noise degredation. 
 *   **Transitions:** Ensure buttery animation sync.
 *   **Docs:** Update docs as compilation phases.
 *   **Ergonomics:** Balance intent with placement.
+*   **Adaptive UI:** XML layers + sharp-cli density scaling.
+*   **Motion:** CubicBezier(0.2, 0.8, 0.2, 1) + 450ms.
+*   **Exits:** Graceful teardown over hard process kill.

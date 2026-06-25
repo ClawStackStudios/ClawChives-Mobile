@@ -387,6 +387,8 @@ class ClawChivesPushReceiver : UnifiedPushReceiver() {
 
 # TESTING IDEAS DO NOT IMPLEMENT
 
+- [ ] Integrate HapticFeedbackConstants into the main interactive buttons (the 'Pinchmark' and 'Pod' actions) to provide subtle, premium physical confirmation for user interactions.
+
 - [ ] Add a small visual indicator (like a colored dot) to the bottom navigation bar to signal active server connection status in real-time.
 
 - [ ] Implement haptic vibration feedback for the central '+' button and the bottom navigation elements to match standard Android interaction patterns.
@@ -412,3 +414,7 @@ class ClawChivesPushReceiver : UnifiedPushReceiver() {
 - [ ] Create a Settings UI component using Jetpack Compose that allows users to input and update their server URL, which will then be persisted via the ROOM database.
 
 - [ ] Integrate a secure cloud synchronization feature for ClawChives. Allow users to opt-in to sync their pinchmarks to a chosen cloud storage provider (e.g., S3, Google Drive). Ensure end-to-end encryption for all synced data.
+
+- [ ] Create a local Room-based audit log to record basic user session durations and action timestamps, helping to refine the 'graceful exit' logic by understanding usage patterns.
+
+- [ ] Implement a network connectivity monitor using ConnectivityManager to trigger a 'Sync Status' indicator in the dashboard, enabling offline read-only mode for cached data when the server is unreachable.

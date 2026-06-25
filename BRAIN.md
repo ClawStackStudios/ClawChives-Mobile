@@ -71,3 +71,15 @@ Every seed I compress must pass four invariants. If it fails any one of them, it
 | Seed | Pattern | Deploy When |
 |---|---|---|
 | *"Keep only high‑salience tokens each dimension must be structural invariant"* | **Structural Salience Filtering** Retain dimensions that score above a threshold and represent true invariants. | building large language model embeddings, designing feature spaces for reinforcement learning, compressing simulation state for real‑time rendering, pruning high‑dimensional sensor data in robotics |
+
+> "Aesthetics must serve function; motion maps the mental model"
+
+| Seed | Pattern | Deploy When |
+|---|---|---|
+| *"Aesthetics must serve function; motion maps the mental model"* | **Meaningful Polish** Premium feel arises from aligning visual transitions with cognitive spatial reasoning, avoiding tacked-on theatre. | designing UI animations, structuring navigation flows, balancing visual flair with ergonomic speed, refining "buttery" feel |
+
+> "Documentation is a structural compilation phase, not an afterthought"
+
+| Seed | Pattern | Deploy When |
+|---|---|---|
+| *"Documentation is a structural compilation phase, not an afterthought"* | **Docs as Compilation** Treating state files as the final execution step that structurally locks in the topology. | closing feature loops, managing session state, preserving continuity across context windows, finalizing architectures |

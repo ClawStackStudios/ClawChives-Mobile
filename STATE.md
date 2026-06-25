@@ -16,7 +16,7 @@ Git Hygiene Mandate: Maintain clean commit history and semantic release tags. Su
 # Application Topology Map
 
 **Topology Phase:** Floor (UI Polish & Interaction Refinements v0.0.4.2)
-**Verified Intent:** Refined the application's visual integrity by applying dynamic Material Theme colors to `AddPodDialog` and `AddBookmarkDialog`, replacing hardcoded hexes. Reverted Gateway screen URL entry to segmented inputs for clearer parsing. Smoothed the theme switch circular reveal animation to prevent flickering. Swapped dashboard Actions and View Options buttons, and implemented a graceful "Close App" action within a slide-out Actions menu.
+**Verified Intent:** Refined the application's visual integrity by applying dynamic Material Theme colors to `AddPodDialog` and `AddBookmarkDialog`, replacing hardcoded hexes. Reverted Gateway screen URL entry to segmented inputs for clearer parsing. Smoothed the theme switch circular reveal animation to prevent flickering. Swapped dashboard Actions and View Options buttons, and implemented a graceful "Close App" action within a slide-out Actions menu. Upgraded screen navigation transitions with custom easing curves. Integrated a custom adaptive system icon.
 
 ## The Four Core Components Mapping
 

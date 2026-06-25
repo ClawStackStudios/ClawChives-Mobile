@@ -45,6 +45,13 @@ Familiar and intuitive placement.
 * **Ergonomic Action Bar:** The dashboard navigation bar has been reorganized. The View Options slider is now ergonomically positioned on the left, while the Settings/Actions menu has been moved to the right.
 * **Graceful Exit Integration:** Implemented a new "Close App" action sequence inside the new Actions BottomSheet. When tapped, it triggers an explicit confirmation dialog before gracefully tearing down the activity and preserving state.
 
+### 💫 3. Premium Haptics & Visuals
+
+A sense of place and identity.
+
+* **Buttery Navigation Transitions:** Upgraded the `NavHost` screen transitions with custom CubicBezier easing curves, delivering a premium, buttery smooth navigation experience without compromising functional speed.
+* **System Icon Integration:** Deployed a custom application icon across all density buckets (`mdpi` to `xxxhdpi`) with full support for Android Adaptive Icons (`mipmap-anydpi-v26`), establishing a distinct brand identity on the launcher.
+
 ---
 
 ## 📋 Commit Ledger (Since `v0.0.4.1`)
@@ -54,6 +61,8 @@ Familiar and intuitive placement.
 * `[commit_hash]` — **fix:** smooth circular reveal animation during theme transition
 * `[commit_hash]` — **feat:** reorder dashboard actions bar and add "Close App" slide-out action sheet
 * `[commit_hash]` — **chore:** bump versions and boundary contracts to `0.0.4.2`
+* `[commit_hash]` — **style:** apply premium CubicBezier easing to NavHost transitions
+* `[commit_hash]` — **feat:** integrate custom adaptive system icon across all density buckets
 
 ---
 
