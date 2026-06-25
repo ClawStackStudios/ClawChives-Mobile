@@ -126,7 +126,51 @@ fun ClawChivesApp(
           
           NavHost(
             navController = navController,
-            startDestination = "gateway"
+            startDestination = "gateway",
+            enterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 450,
+                        easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+                    )
+                ) + androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 450)
+                )
+            },
+            exitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { -it / 4 },
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 450,
+                        easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+                    )
+                ) + androidx.compose.animation.fadeOut(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 450)
+                )
+            },
+            popEnterTransition = {
+                androidx.compose.animation.slideInHorizontally(
+                    initialOffsetX = { -it / 4 },
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 450,
+                        easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+                    )
+                ) + androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 450)
+                )
+            },
+            popExitTransition = {
+                androidx.compose.animation.slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.tween(
+                        durationMillis = 450,
+                        easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+                    )
+                ) + androidx.compose.animation.fadeOut(
+                    animationSpec = androidx.compose.animation.core.tween(durationMillis = 450)
+                )
+            }
           ) {
             composable("gateway") {
               val gatewayViewModel: GatewayViewModel = viewModel(
