@@ -97,6 +97,8 @@ fun DashboardScreen(
     val tagsCount = (uiState as? DashboardState.Success)?.tagsCount ?: 0
 
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showActionsMenu by remember { mutableStateOf(false) }
+    var showCloseAppConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(sharedUrl) {
         if (sharedUrl != null) {
@@ -518,8 +520,8 @@ fun DashboardScreen(
                 if (currentState != null) {
                     val hasActiveFilters = currentState.filterStarred || currentState.filterPinned || currentState.filterArchived || currentState.tagFilter != null
                     CustomBottomBarWithHump(
-                        onViewClick = { showViewBottomSheet = true },
-                        onRightClick = { showSettingsMenu = true },
+                        onLeftClick = { showViewBottomSheet = true },
+                        onRightClick = { showActionsMenu = true },
                         onAddClick = { 
                             bookmarkToEdit = null
                             showAddDialog = true 
@@ -622,6 +624,62 @@ fun DashboardScreen(
         visible = showSettingsMenu,
         onDismiss = { showSettingsMenu = false }
     )
+
+    if (showActionsMenu) {
+        ModalBottomSheet(
+            onDismissRequest = { showActionsMenu = false },
+            containerColor = MaterialTheme.colorScheme.background,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 48.dp)
+            ) {
+                Text("ACTIONS", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = CyanAccent)
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().clickable { 
+                        showActionsMenu = false
+                        showCloseAppConfirmation = true
+                    }.padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Close App", tint = RedAccent)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Close App", color = RedAccent, fontSize = 16.sp)
+                }
+            }
+        }
+    }
+
+    if (showCloseAppConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showCloseAppConfirmation = false },
+            title = { Text("Close App", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Are you sure you want to gracefully close the application?", color = MaterialTheme.colorScheme.onSurface) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCloseAppConfirmation = false
+                        (context as? android.app.Activity)?.finishAffinity()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = RedAccent)
+                ) {
+                    Text("Close App", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCloseAppConfirmation = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(12.dp)
+        )
+    }
     } // ends root Box
 } // ends DashboardScreen
 
@@ -933,7 +991,7 @@ fun ViewOptionsBottomSheet(
 
 @Composable
 fun CustomBottomBarWithHump(
-    onViewClick: () -> Unit,
+    onLeftClick: () -> Unit,
     onRightClick: () -> Unit,
     onAddClick: () -> Unit,
     hasActiveFilters: Boolean
@@ -996,7 +1054,7 @@ fun CustomBottomBarWithHump(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box {
-                IconButton(onClick = onViewClick) {
+                IconButton(onClick = onLeftClick) {
                     Icon(Icons.Default.Tune, contentDescription = "View Options", tint = if (hasActiveFilters) CyanAccent else MaterialTheme.colorScheme.onSurface)
                 }
                 if (hasActiveFilters) {
@@ -1005,7 +1063,7 @@ fun CustomBottomBarWithHump(
             }
             
             IconButton(onClick = onRightClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurface)
+                Icon(Icons.Default.Settings, contentDescription = "Actions", tint = MaterialTheme.colorScheme.onSurface)
             }
         }
 

@@ -29,7 +29,7 @@ class StateBoundaryIntegrationTest {
             capturedAccept = request.headers["Accept"]
             
             respond(
-                content = """{"success":true,"service":"ClawChives","version":"0.0.4.0","mode":"prod","uptime":120.0,"counts":{"bookmarks":0,"folders":0,"agentKeys":0}}""",
+                content = """{"success":true,"service":"ClawChives","version":"0.0.4.1","mode":"prod","uptime":120.0,"counts":{"bookmarks":0,"folders":0,"agentKeys":0}}""",
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
@@ -39,8 +39,8 @@ class StateBoundaryIntegrationTest {
         val result = client.getHealth()
 
         assertTrue(result.isSuccess)
-        assertEquals("0.0.4.0", capturedClientVersion)
-        assertEquals("0.0.4.0", capturedAcceptVersion)
+        assertEquals("0.0.4.1", capturedClientVersion)
+        assertEquals("0.0.4.1", capturedAcceptVersion)
         assertEquals("application/json", capturedAccept)
     }
 

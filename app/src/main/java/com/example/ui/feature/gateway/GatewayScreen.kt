@@ -88,15 +88,17 @@ fun GatewayScreen(
   val savedServerUrl by viewModel.savedServerUrl.collectAsStateWithLifecycle(initialValue = null)
   val savedKey by viewModel.savedKey.collectAsStateWithLifecycle(initialValue = null)
   var isUploadMode by remember { mutableStateOf(false) } // Default to false so Paste Key is shown if pre-filled
-  var protocol by remember { mutableStateOf("http") }
+  var protocol by remember { mutableStateOf("https") }
   var serverHost by remember { mutableStateOf("") }
   var serverPort by remember { mutableStateOf("") }
-  var keyText by remember { mutableStateOf("") }
-  var uploadedKey by remember { mutableStateOf<String?>(null) }
-  var uploadedFileName by remember { mutableStateOf<String?>(null) }
+  var isUrlValid by remember { mutableStateOf(true) }
+  var urlErrorMessage by remember { mutableStateOf("") }
   var isProtocolDropdownExpanded by remember { mutableStateOf(false) }
   var isHostFocused by remember { mutableStateOf(false) }
   var isPortFocused by remember { mutableStateOf(false) }
+  var keyText by remember { mutableStateOf("") }
+  var uploadedKey by remember { mutableStateOf<String?>(null) }
+  var uploadedFileName by remember { mutableStateOf<String?>(null) }
 
   val focusManager = LocalFocusManager.current
 
@@ -263,8 +265,8 @@ fun GatewayScreen(
             .height(56.dp)
             .clip(RoundedCornerShape(12.dp))
             .border(
-              width = if (isHostFocused || isPortFocused) 1.5.dp else 1.dp,
-              color = if (isPortFocused) RedAccent else if (isHostFocused) CyanAccent else MaterialTheme.colorScheme.surfaceVariant,
+              width = if (isHostFocused || isPortFocused || !isUrlValid) 1.5.dp else 1.dp,
+              color = if (!isUrlValid) MaterialTheme.colorScheme.error else if (isPortFocused) RedAccent else if (isHostFocused) CyanAccent else MaterialTheme.colorScheme.surfaceVariant,
               shape = RoundedCornerShape(12.dp)
             ),
           verticalAlignment = Alignment.CenterVertically
@@ -274,7 +276,7 @@ fun GatewayScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
               .fillMaxHeight()
-              .background(CyanAccent)
+              .background(if (!isUrlValid) MaterialTheme.colorScheme.error else CyanAccent)
               .clickable { isProtocolDropdownExpanded = !isProtocolDropdownExpanded }
               .padding(horizontal = 14.dp)
           ) {
@@ -313,7 +315,10 @@ fun GatewayScreen(
               }
               BasicTextField(
                 value = serverHost,
-                onValueChange = { parseAndSetUrl(it) },
+                onValueChange = { 
+                    parseAndSetUrl(it) 
+                    isUrlValid = true
+                },
                 textStyle = TextStyle(
                   color = MaterialTheme.colorScheme.onBackground,
                   fontSize = 14.sp,
@@ -363,7 +368,7 @@ fun GatewayScreen(
             modifier = Modifier
               .width(1.dp)
               .height(24.dp)
-              .background(if (isPortFocused) RedAccent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+              .background(if (!isUrlValid) MaterialTheme.colorScheme.error else if (isPortFocused) RedAccent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
           )
 
           // 4. Port section with slide animation and red focus highlight background
@@ -371,7 +376,7 @@ fun GatewayScreen(
             modifier = Modifier
               .width(animatedPortWidth)
               .height(56.dp)
-              .background(if (isPortFocused) RedAccent.copy(alpha = 0.12f) else Color.Transparent)
+              .background(if (!isUrlValid) MaterialTheme.colorScheme.error.copy(alpha = 0.12f) else if (isPortFocused) RedAccent.copy(alpha = 0.12f) else Color.Transparent)
           ) {
             Row(
               modifier = Modifier
@@ -386,16 +391,19 @@ fun GatewayScreen(
                 if (serverPort.isEmpty()) {
                   Text(
                     text = "Port",
-                    color = if (isPortFocused) RedAccent.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    color = if (!isUrlValid) MaterialTheme.colorScheme.error else if (isPortFocused) RedAccent.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal
                   )
                 }
                 BasicTextField(
                   value = serverPort,
-                  onValueChange = { input -> serverPort = input.filter { it.isDigit() } },
+                  onValueChange = { input -> 
+                      serverPort = input.filter { it.isDigit() } 
+                      isUrlValid = true
+                  },
                   textStyle = TextStyle(
-                    color = if (isPortFocused) RedAccent else MaterialTheme.colorScheme.onBackground,
+                    color = if (!isUrlValid) MaterialTheme.colorScheme.error else if (isPortFocused) RedAccent else MaterialTheme.colorScheme.onBackground,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                   ),
@@ -440,6 +448,15 @@ fun GatewayScreen(
             }
           }
         }
+        
+        if (!isUrlValid) {
+            Text(
+                text = urlErrorMessage, 
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
       }
 
       // 5. Custom sliding dropdown menu for protocol selection
@@ -465,6 +482,7 @@ fun GatewayScreen(
                 .clickable {
                   protocol = "http"
                   isProtocolDropdownExpanded = false
+                  isUrlValid = true
                 }
                 .background(if (protocol == "http") CyanAccent.copy(alpha = 0.12f) else Color.Transparent)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -487,6 +505,7 @@ fun GatewayScreen(
                 .clickable {
                   protocol = "https"
                   isProtocolDropdownExpanded = false
+                  isUrlValid = true
                 }
                 .background(if (protocol == "https") CyanAccent.copy(alpha = 0.12f) else Color.Transparent)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -564,9 +583,9 @@ fun GatewayScreen(
     Spacer(modifier = Modifier.weight(1f))
 
     val isFormValid = if (isUploadMode) {
-        uploadedKey != null
+        uploadedKey != null && serverHost.isNotBlank()
     } else {
-        keyText.isNotBlank()
+        keyText.isNotBlank() && serverHost.isNotBlank()
     }
 
     Button(
@@ -585,6 +604,13 @@ fun GatewayScreen(
           }
         }
         val targetKey = cleanAndExtractKey(if (isUploadMode) uploadedKey.orEmpty() else keyText)
+        
+        if (!android.webkit.URLUtil.isValidUrl(finalUrl)) {
+            isUrlValid = false
+            urlErrorMessage = "Invalid Server URL format. Must use http:// or https://"
+            return@Button
+        }
+        
         viewModel.login(finalUrl, targetKey)
       },
       enabled = uiState !is GatewayUiState.Loading && isFormValid,

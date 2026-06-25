@@ -1,7 +1,11 @@
 package com.example.ui.theme
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -13,8 +17,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.hypot
@@ -42,39 +46,56 @@ fun ThemeCircularRevealProvider(
     content: @Composable (theme: AppTheme, setTheme: (AppTheme, Offset) -> Unit) -> Unit
 ) {
     var currentTheme by remember { mutableStateOf(initialTheme) }
-    var previousTheme by remember { mutableStateOf(initialTheme) }
     var revealCenter by remember { mutableStateOf(Offset.Zero) }
     val revealProgress = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    
+    val view = LocalView.current
+    var capturedImage by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
 
     val setTheme: (AppTheme, Offset) -> Unit = { newTheme, center ->
         if (newTheme != currentTheme) {
-            previousTheme = currentTheme
+            try {
+                // Capture the current ComposeView before changing the theme
+                val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                view.draw(canvas)
+                capturedImage = bitmap.asImageBitmap()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             currentTheme = newTheme
             revealCenter = center
             scope.launch {
                 revealProgress.snapTo(0f)
                 revealProgress.animateTo(
                     targetValue = 1f,
-                    animationSpec = tween(durationMillis = 600)
+                    animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
                 )
+                capturedImage = null
             }
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Draw the previous theme in the background
-        if (revealProgress.value < 1f) {
-            MyApplicationTheme(theme = previousTheme) {
-                content(previousTheme, setTheme)
-            }
+        // 1. Draw the captured image (old theme) at the bottom
+        capturedImage?.let { image ->
+            Image(
+                bitmap = image,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
         }
 
-        // Draw the new theme in the foreground, masked by the circular reveal
+        // 2. Draw the new theme, masked by the circular reveal
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(CircularRevealShape(revealProgress.value, revealCenter))
+                .then(
+                    if (revealProgress.value < 1f) Modifier.clip(CircularRevealShape(revealProgress.value, revealCenter))
+                    else Modifier
+                )
         ) {
             MyApplicationTheme(theme = currentTheme) {
                 content(currentTheme, setTheme)

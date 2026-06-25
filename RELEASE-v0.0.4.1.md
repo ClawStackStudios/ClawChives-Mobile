@@ -1,8 +1,8 @@
 ---
 
-# 🦞 ClawChives — Release v0.0.4.0
+# 🦞 ClawChives — Release v0.0.4.1
 
-## *The Storage Unification Molt*
+## *The Architectural Refactor Molt*
 
 ```text
        ______ __                 ______  __     _                     
@@ -24,24 +24,25 @@
 
 ## 🚀 The Core Summary
 
-Welcome to **v0.0.4.0** of **ClawChives**! This release unifies our local data persistence into a single robust source of truth. We have completely removed cleartext `SharedPreferences` for sensitive authentication state, migrating everything into our isolated Android Room Database (`AppDatabase`). Additionally, Dashboard filter states are now fully persisted locally, retaining your selected tabs, active tags, and search contexts across application restarts.
+Welcome to **v0.0.4.1** of **ClawChives**! This release finalizes our storage layer refactoring, introducing a pristine Repository pattern to abstract our Room database configuration storage. We have also added robust client-side validation for server URL inputs to enforce a clean entry layer before any data is passed into local state.
 
 ---
 
 ## 💎 Key Themes & Highlights
 
-### 💾 1. Storage Unification & Security Hardening
+### 💾 1. Architectural Abstraction
 
-Our persistence layer is now unified, testable, and secure.
+A decoupled, stable flow.
 
-* **Room Database Consolidation:** Eliminated `AuthPreferences` (`SharedPreferences`) for session tokens and raw keys, storing the unified `AppConfig` locally inside the structured Room Database.
-* **Privacy & Security Alignment:** Aligned the data layer with privacy and security mandates (see `SECURITY.md` and `PRIVACY.md`) by exclusively using the robust local sandbox database to store configuration.
+* **Settings Repository Pattern:** Abstracted local configuration management (server URLs, theme choices) through a dedicated `SettingsRepository` interface using a Kotlin `Flow`.
+* **Clean Boundaries:** The UI and ViewModel layers now correctly interact with settings via the repository, rather than exposing Room DAO methods directly.
 
-### 🗂️ 2. State Persistence
+### 🛡️ 2. Entry-Layer Hardening
 
-Your workflow should remain unbroken.
+Clean input at the edge.
 
-* **Dashboard State Retention:** Dashboard interactions (starred tabs, active folders, selected tags, sort orders) are now saved locally using `FilterStateDao`. When returning to the app, your previous view is exactly as you left it.
+* **Jetpack Compose URL Validation:** Introduced robust client-side logic utilizing `URLUtil.isValidUrl()` to verify Server URL formatting before executing any local persistence.
+* **Reactive Error States:** Invalid Server URLs now immediately trigger an interactive visual error state directly on the `OutlinedTextField`, preventing malformed data from persisting.
 
 ---
 
@@ -59,7 +60,7 @@ Your workflow should remain unbroken.
             ▼                      ▼             
 ┌───────────────────────────────────────────────┐
 │     🔄 [ViewModels & State Controllers]       │
-│  [ThemePreferences]   [LocalToastState]       │
+│  [SettingsRepository] [LocalToastState]       │
 └───────────────────┬───────────────────────────┘
                     │  (Repository Flow)            
                     ▼                            
@@ -77,11 +78,11 @@ Your workflow should remain unbroken.
 
 ---
 
-## 📋 Commit Ledger (Since `v0.0.3.0`)
+## 📋 Commit Ledger (Since `v0.0.4.0`)
 
-* `[commit_hash]` — **refactor:** migrate Auth data from SharedPreferences to Room Database
-* `[commit_hash]` — **feat:** implement local state persistence for Dashboard UI configurations
-* `[commit_hash]` — **docs:** bump documentation and release notes to `v0.0.4.0`
+* `[commit_hash]` — **refactor:** introduce SettingsRepository to abstract Room database operations
+* `[commit_hash]` — **feat:** implement robust URL validation in GatewayScreen UI
+* `[commit_hash]` — **docs:** bump documentation and release notes to `v0.0.4.1`
 
 ---
 

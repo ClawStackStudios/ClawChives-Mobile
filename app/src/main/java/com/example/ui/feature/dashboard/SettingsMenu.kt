@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.geometry.Offset
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.border
@@ -43,6 +44,10 @@ fun SettingsMenu(
     visible: Boolean,
     onDismiss: () -> Unit
 ) {
+    BackHandler(enabled = visible) {
+        onDismiss()
+    }
+
     AnimatedVisibility(
         visible = visible,
         enter = slideInHorizontally(

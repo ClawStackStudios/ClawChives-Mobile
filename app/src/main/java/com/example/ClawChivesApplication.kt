@@ -5,18 +5,20 @@ import androidx.room.Room
 import com.example.data.local.AppDatabase
 import com.example.data.repository.AuthRepository
 
+import com.example.data.repository.SettingsRepository
+import com.example.data.repository.RoomSettingsRepository
+
 class ClawChivesApplication : Application() {
     
-    lateinit var themePreferences: com.example.ui.theme.ThemePreferences
-        private set
     lateinit var database: AppDatabase
         private set
     lateinit var authRepository: AuthRepository
         private set
+    lateinit var settingsRepository: SettingsRepository
+        private set
         
     override fun onCreate() {
         super.onCreate()
-        themePreferences = com.example.ui.theme.ThemePreferences(this)
         database = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "clawchives_database"
@@ -24,6 +26,7 @@ class ClawChivesApplication : Application() {
         .fallbackToDestructiveMigration(true)
         .build()
         
+        settingsRepository = RoomSettingsRepository(database.appConfigDao())
         authRepository = AuthRepository(database.appConfigDao())
     }
 }

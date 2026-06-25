@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
@@ -47,12 +49,16 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       val app = applicationContext as ClawChivesApplication
-      val initialTheme = app.themePreferences.theme
+      val initialThemeString by app.settingsRepository.theme.collectAsStateWithLifecycle(initialValue = "SYSTEM")
+      val initialTheme = try { com.example.ui.theme.AppTheme.valueOf(initialThemeString) } catch (e: Exception) { com.example.ui.theme.AppTheme.SYSTEM }
 
       com.example.ui.theme.ThemeCircularRevealProvider(initialTheme = initialTheme) { theme, setTheme ->
+          val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
           androidx.compose.runtime.CompositionLocalProvider(
               com.example.ui.theme.LocalThemeState provides com.example.ui.theme.ThemeState(theme) { newTheme, offset ->
-                  app.themePreferences.theme = newTheme
+                  coroutineScope.launch {
+                      app.settingsRepository.saveTheme(newTheme.name)
+                  }
                   setTheme(newTheme, offset)
               }
           ) {
@@ -124,7 +130,7 @@ fun ClawChivesApp(
           ) {
             composable("gateway") {
               val gatewayViewModel: GatewayViewModel = viewModel(
-                factory = GatewayViewModelFactory(authRepository)
+                factory = GatewayViewModelFactory(authRepository, app.settingsRepository)
               )
 
               Scaffold(

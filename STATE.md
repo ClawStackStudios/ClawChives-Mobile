@@ -15,8 +15,8 @@ Git Hygiene Mandate: Maintain clean commit history and semantic release tags. Su
 
 # Application Topology Map
 
-**Topology Phase:** Bridge (Feature expansion and refinement phase)
-**Verified Intent:** Stabilize UI state management, enforce stateless UI components, route side-effects cleanly via ViewModels, and implement global notification system (Toast).
+**Topology Phase:** Floor (UI Polish & Interaction Refinements v0.0.4.2)
+**Verified Intent:** Refined the application's visual integrity by applying dynamic Material Theme colors to `AddPodDialog` and `AddBookmarkDialog`, replacing hardcoded hexes. Reverted Gateway screen URL entry to segmented inputs for clearer parsing. Smoothed the theme switch circular reveal animation to prevent flickering. Swapped dashboard Actions and View Options buttons, and implemented a graceful "Close App" action within a slide-out Actions menu.
 
 ## The Four Core Components Mapping
 
@@ -32,20 +32,20 @@ Git Hygiene Mandate: Maintain clean commit history and semantic release tags. Su
 
 ### 3. The Data Layer (The External Gateway)
 - **Remote (API):** `ClawChivesClient` serves as the sole gateway for network requests using Ktor. `DiagnosticsService` checks server health.
-- **Local (Persistence):** `AppDatabase` (Room) is now the primary source of truth for persistent local data. It houses `AppConfig` (Server URL, Auth Token, Raw Key) and `FilterState` (dashboard tab/folder states). `ThemePreferences` remains in SharedPreferences for immediate synchronous read during pre-Compose startup.
-- **Repository:** `AuthRepository` abstracts the orchestration of tokens, remote auth endpoints, and local Room storage, providing a clean API for the ViewModels.
+- **Local (Persistence):** `AppDatabase` (Room) is now the absolute single source of truth for persistent local data. It houses `AppConfig` (Server URL, Auth Token, Raw Key, Theme) and `FilterState` (dashboard tab/folder states). `SharedPreferences` usage has been completely eradicated.
+- **Repository:** `AuthRepository` abstracts the orchestration of tokens and remote auth endpoints. `SettingsRepository` (`RoomSettingsRepository`) exposes app configuration via a reactive Kotlin `Flow`, providing a clean, decoupled API for the ViewModels and UI.
 
 ### 4. The ViewModels (The Middlemen)
-- **`GatewayViewModel`**: Owns `GatewayUiState`. Orchestrates authentication, connection validation, and navigation triggers.
+- **`GatewayViewModel`**: Owns `GatewayUiState`. Depends on `AuthRepository` and `SettingsRepository`. Orchestrates authentication, connection validation, and navigation triggers.
 - **`DashboardViewModel`**: Owns `DashboardState`. Manages pagination, folder navigation, filter states, and bookmark CRUD operations. Coordinates with the Data Layer and updates state for `DashboardScreen` to consume.
 
 ## Invariant Tracing
 
 | Invariable | Mapped To | Current State |
 |---|---|---|
-| **Where does state live?** | `ViewModels` (`_uiState` StateFlows), `ToastState` (CompositionLocal) | Consistent. ViewModels hold single-source-of-truth for screen state. |
-| **Where does feedback live?** | `ToastHost`, `DiagnosticsService`, Error UI states | Global toasts overlay the app, ensuring feedback is visible across navigation boundaries. |
-| **What breaks if I delete this?** | Modifying `ClawChivesClient` alters all remote fetch structures. Modifying `AuthRepository` disrupts auto-reauth flow. | High blast radius in Data Layer. Low blast radius in stateless UI components. |
+| **Where does state live?** | `ViewModels` (`_uiState` StateFlows), `ToastState` (CompositionLocal) | Consistent. ViewModels hold single-source-of-truth for screen state. Global Settings are exposed via `SettingsRepository` Flow. |
+| **Where does feedback live?** | `ToastHost`, `DiagnosticsService`, UI Form Validation (`GatewayScreen`) | Global toasts overlay the app, ensuring feedback is visible across navigation boundaries. Strict input validation prevents bad data locally. |
+| **What breaks if I delete this?** | Modifying `ClawChivesClient` alters all remote fetch structures. Modifying `AuthRepository` or `SettingsRepository` disrupts UI state streams. | High blast radius in Data Layer and Repositories. Low blast radius in stateless UI components. |
 | **When does timing work?** | Coroutine scopes in ViewModels, `LaunchedEffect` in `MainActivity` (for 401 unauth) | Race conditions mitigated by single-threaded state updates and Flow collections. |
 
 ## Current Known Tensions

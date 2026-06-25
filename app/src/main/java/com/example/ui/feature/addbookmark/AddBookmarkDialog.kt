@@ -94,8 +94,8 @@ fun AddBookmarkDialog(
                 .fillMaxWidth(0.95f)
                 .padding(16.dp),
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF0F172A),
-            border = BorderStroke(1.dp, CyanAccent)
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -111,23 +111,23 @@ fun AddBookmarkDialog(
                     Column {
                         Text(
                             text = if (bookmarkToEdit != null) "EDIT PINCHMARK" else "ADD PINCHMARK",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
                         Text(
                             text = if (bookmarkToEdit != null) "MODIFY YOUR SAVED URL" else "PINCH A URL INTO YOUR COLLECTION",
-                            color = MutedText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MutedText)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
-                HorizontalDivider(color = CyanAccent.copy(alpha = 0.5f), thickness = 1.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), thickness = 1.dp)
 
                 // Body
                 Column(
@@ -168,13 +168,13 @@ fun AddBookmarkDialog(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("POD", color = MutedText, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("POD", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
                             Box {
                                 OutlinedTextField(
                                     value = pod,
                                     onValueChange = {}, // Read only
                                     readOnly = true,
-                                    trailingIcon = { Icon(Icons.Outlined.Folder, contentDescription = null, tint = MutedText) },
+                                    trailingIcon = { Icon(Icons.Outlined.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                                     modifier = Modifier.fillMaxWidth().clickable { showPodDropdown = true },
                                     colors = customTextFieldColors(),
                                     shape = RoundedCornerShape(8.dp),
@@ -186,10 +186,10 @@ fun AddBookmarkDialog(
                                 DropdownMenu(
                                     expanded = showPodDropdown,
                                     onDismissRequest = { showPodDropdown = false },
-                                    modifier = Modifier.background(DarkSurface)
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("No Pod", color = LightText) },
+                                        text = { Text("No Pod", color = MaterialTheme.colorScheme.onSurface) },
                                         onClick = { 
                                             pod = "No Pod"
                                             selectedPodId = null
@@ -198,7 +198,7 @@ fun AddBookmarkDialog(
                                     )
                                     availablePods.forEach { p ->
                                         DropdownMenuItem(
-                                            text = { Text(p.name, color = LightText) },
+                                            text = { Text(p.name, color = MaterialTheme.colorScheme.onSurface) },
                                             onClick = { 
                                                 pod = p.name
                                                 selectedPodId = p.id
@@ -211,12 +211,12 @@ fun AddBookmarkDialog(
                         }
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("TAGS", color = MutedText, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                            Text("TAGS", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 OutlinedTextField(
                                     value = tagInput,
                                     onValueChange = { tagInput = it },
-                                    placeholder = { Text("Add tags...", color = MutedText) },
+                                    placeholder = { Text("Add tags...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                     modifier = Modifier.weight(1f),
                                     colors = customTextFieldColors(),
                                     shape = RoundedCornerShape(8.dp),
@@ -227,8 +227,8 @@ fun AddBookmarkDialog(
                                     modifier = Modifier
                                         .size(48.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFF0F172A))
-                                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
                                         .clickable { 
                                             if (tagInput.isNotBlank() && !addedTags.contains(tagInput.trim())) {
                                                 addedTags.add(tagInput.trim())
@@ -237,7 +237,7 @@ fun AddBookmarkDialog(
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("+", color = Color.White, fontSize = 24.sp)
+                                    Text("+", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp)
                                 }
                             }
                             
@@ -257,8 +257,8 @@ fun AddBookmarkDialog(
                                 } else {
                                     Button(
                                         onClick = { showManageTags = true },
-                                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurface),
-                                        border = BorderStroke(1.dp, Color(0xFF334155)),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                                         shape = RoundedCornerShape(12.dp),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                         modifier = Modifier.height(36.dp)
@@ -266,10 +266,10 @@ fun AddBookmarkDialog(
                                         Icon(
                                             painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_manage),
                                             contentDescription = null,
-                                            tint = LightText,
+                                            tint = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier.size(14.dp).padding(end = 4.dp)
                                         )
-                                        Text("TAGS (${addedTags.size})", color = LightText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Text("TAGS (${addedTags.size})", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -289,7 +289,7 @@ fun AddBookmarkDialog(
                     }
                 }
 
-                HorizontalDivider(color = Color(0xFF334155), thickness = 1.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
                 // Footer
                 Row(
@@ -305,10 +305,10 @@ fun AddBookmarkDialog(
                             .height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF0F172A),
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        border = BorderStroke(1.dp, Color(0xFF334155))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Text("CANCEL", fontWeight = FontWeight.Bold)
                     }
@@ -359,11 +359,11 @@ fun AddBookmarkDialog(
                             .height(48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = CyanAccent,
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Text("PINCH IT! \uD83E\uDD9E", fontWeight = FontWeight.Bold, color = DarkBackground) // 🦞
+                        Text("PINCH IT! \uD83E\uDD9E", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) // 🦞
                     }
                 }
             }
@@ -387,7 +387,7 @@ fun TagPill(tag: String, onRemove: () -> Unit) {
     val color = getTagColor(tag)
     Row(
         modifier = Modifier
-            .background(DarkSurface, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
             .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -417,21 +417,21 @@ fun ManageTagsDialog(
         Surface(
             modifier = Modifier.fillMaxWidth(0.9f),
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF0F172A),
-            border = BorderStroke(1.dp, CyanAccent)
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
                     text = "MANAGE TAGS",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
-                HorizontalDivider(color = Color(0xFF334155), thickness = 1.dp, modifier = Modifier.padding(bottom = 16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp, modifier = Modifier.padding(bottom = 16.dp))
                 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -442,7 +442,7 @@ fun ManageTagsDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(DarkSurface, RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                                 .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -468,8 +468,8 @@ fun ManageTagsDialog(
                         .height(48.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = CyanAccent,
-                        contentColor = DarkBackground
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text("DONE", fontWeight = FontWeight.Bold)
@@ -491,11 +491,11 @@ fun CustomTextField(
     isError: Boolean = false
 ) {
     Column {
-        Text(text = label, color = if (isError) MaterialTheme.colorScheme.error else MutedText, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+        Text(text = label, color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = MutedText) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = singleLine,
             minLines = minLines,
@@ -509,17 +509,17 @@ fun CustomTextField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun customTextFieldColors() = TextFieldDefaults.colors(
-    focusedContainerColor = DarkSurface,
-    unfocusedContainerColor = DarkSurface,
-    disabledContainerColor = DarkSurface,
-    focusedIndicatorColor = CyanAccent.copy(alpha = 0.5f),
-    unfocusedIndicatorColor = Color(0xFF334155),
-    focusedTextColor = LightText,
-    unfocusedTextColor = LightText
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
 )
 
 @Composable
-fun CustomCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, labelColor: Color = MutedText) {
+fun CustomCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, labelColor: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.clickable { onCheckedChange(!checked) }
@@ -527,12 +527,12 @@ fun CustomCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -
         Box(
             modifier = Modifier
                 .size(16.dp)
-                .background(if (checked) CyanAccent else Color.Transparent, RoundedCornerShape(2.dp))
-                .border(if (checked) 0.dp else 1.dp, if (checked) CyanAccent else Color.White, RoundedCornerShape(2.dp)),
+                .background(if (checked) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(2.dp))
+                .border(if (checked) 0.dp else 1.dp, if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, RoundedCornerShape(2.dp)),
             contentAlignment = Alignment.Center
         ) {
             if (checked) {
-                Icon(Icons.Default.Check, contentDescription = null, tint = DarkBackground, modifier = Modifier.size(12.dp))
+                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(12.dp))
             }
         }
         Spacer(modifier = Modifier.width(6.dp))

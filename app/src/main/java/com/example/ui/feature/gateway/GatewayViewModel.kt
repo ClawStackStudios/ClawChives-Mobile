@@ -3,6 +3,7 @@ package com.example.ui.feature.gateway
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.repository.AuthRepository
+import com.example.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,10 +18,11 @@ sealed interface GatewayUiState {
 }
 
 class GatewayViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    val savedServerUrl = authRepository.serverUrl
+    val savedServerUrl = settingsRepository.serverUrl
     val savedKey = authRepository.rawKey
 
     fun clearSavedKey() {

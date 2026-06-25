@@ -92,8 +92,8 @@ fun PodEditDialog(
                 .fillMaxWidth(0.95f)
                 .padding(16.dp),
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF0F172A), // Dark Slate Background
-            border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f))
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -102,7 +102,7 @@ fun PodEditDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF0F172A))
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -114,12 +114,12 @@ fun PodEditDialog(
                         Icon(
                             imageVector = Icons.Default.Archive,
                             contentDescription = "Archive",
-                            tint = CyanAccent,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = if (folder != null) "EDIT POD" else "NEW POD",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             letterSpacing = (-0.5).sp
@@ -131,11 +131,11 @@ fun PodEditDialog(
                             .size(36.dp)
                             .clip(RoundedCornerShape(12.dp))
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MutedText, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                     }
                 }
 
-                HorizontalDivider(color = CyanAccent.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), thickness = 1.dp)
 
                 // Body
                 Column(
@@ -151,23 +151,23 @@ fun PodEditDialog(
                     ) {
                         Text(
                             text = "Pod Name",
-                            color = Color(0xFFE2E8F0), // slate-200
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
-                            placeholder = { Text("e.g. Research, Ideas, Work...", fontSize = 14.sp, color = MutedText) },
+                            placeholder = { Text("e.g. Research, Ideas, Work...", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedBorderColor = CyanAccent,
-                                unfocusedBorderColor = Color(0xFF334155), // slate-700
-                                focusedContainerColor = Color(0xFF1E293B), // slate-800
-                                unfocusedContainerColor = Color(0xFF1E293B)
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = {
@@ -187,7 +187,7 @@ fun PodEditDialog(
                     ) {
                         Text(
                             text = "Color",
-                            color = Color(0xFFE2E8F0),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -201,7 +201,7 @@ fun PodEditDialog(
                                 val colorParsed = try {
                                     Color(android.graphics.Color.parseColor(hex))
                                 } catch (e: Exception) {
-                                    CyanAccent
+                                    MaterialTheme.colorScheme.primary
                                 }
                                 val isSelected = selectedColor == hex
 
@@ -213,7 +213,7 @@ fun PodEditDialog(
                                         .clickable { selectedColor = hex }
                                         .border(
                                             width = if (isSelected) 2.dp else 1.dp,
-                                            color = if (isSelected) CyanAccent else Color(0xFF334155),
+                                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
                                             shape = CircleShape
                                         )
                                         .then(if (isSelected) Modifier.scale(1.1f).shadow(4.dp, CircleShape) else Modifier)
@@ -232,14 +232,14 @@ fun PodEditDialog(
                                     .clickable { /* Custom color picker not implemented natively in this snippet */ }
                                     .border(
                                         width = 2.dp,
-                                        color = if (isCustomSelected) CyanAccent else Color(0xFF475569), // slate-600
+                                        color = if (isCustomSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
                                         shape = CircleShape
                                     )
                                     .then(if (isCustomSelected) Modifier.scale(1.1f) else Modifier),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (!isCustomSelected) {
-                                    Text("+", color = Color(0xFF94A3B8), fontSize = 14.sp)
+                                    Text("+", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                                 }
                             }
                         }
@@ -252,22 +252,22 @@ fun PodEditDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF020617).copy(alpha = 0.5f)) // bg-slate-950/50
-                            .border(1.dp, Color(0xFF1E293B).copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                             .padding(16.dp)
                     ) {
-                        val previewColor = try { Color(android.graphics.Color.parseColor(selectedColor)) } catch(e:Exception){ CyanAccent }
+                        val previewColor = try { Color(android.graphics.Color.parseColor(selectedColor)) } catch(e:Exception){ MaterialTheme.colorScheme.primary }
                         Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(previewColor))
                         Text(
                             text = "PREVIEW:",
-                            color = MutedText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
                         )
                         Text(
                             text = name.ifBlank { "Pod Name" },
-                            color = Color(0xFFF1F5F9), // slate-100
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             maxLines = 1,
@@ -285,8 +285,8 @@ fun PodEditDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF450A0A).copy(alpha = 0.3f)) // red-900/10
-                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.errorContainer)
+                                .border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(16.dp))
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -298,14 +298,14 @@ fun PodEditDialog(
                                 Column {
                                     Text(
                                         text = "This Pod contains $bookmarkCount Pinchmark${if (bookmarkCount != 1) "s" else ""}.",
-                                        color = Color(0xFFFCA5A5), // red-300
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "Deleting it will un-Pod them, but won't delete the Pinchmarks themselves.",
-                                        color = Color(0xFFF87171), // red-400
+                                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
                                         fontSize = 12.sp,
                                         lineHeight = 18.sp
                                     )
@@ -319,8 +319,8 @@ fun PodEditDialog(
                                     onClick = { confirmDelete = false },
                                     modifier = Modifier.weight(1f).height(44.dp),
                                     shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color(0xFF334155)),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onErrorContainer)
                                 ) {
                                     Text("Cancel")
                                 }
@@ -328,7 +328,7 @@ fun PodEditDialog(
                                     onClick = handleConfirmDelete,
                                     modifier = Modifier.weight(1f).height(44.dp),
                                     shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626), contentColor = Color.White)
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
                                 ) {
                                     Text("Delete Pod", fontWeight = FontWeight.Bold)
                                 }
@@ -344,14 +344,14 @@ fun PodEditDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF78350F).copy(alpha = 0.3f)) // amber-900/10
-                                .border(1.dp, Color(0xFFF59E0B).copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                .border(1.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(16.dp))
                                 .padding(16.dp)
                         ) {
                             Text("📌", fontSize = 18.sp)
                             Text(
                                 text = "Remove all pins from your Pinchmarks first before deleting the Pinned Pod.",
-                                color = Color(0xFFFCD34D), // amber-300
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 14.sp
                             )
@@ -363,7 +363,7 @@ fun PodEditDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF020617).copy(alpha = 0.2f)) // bg-slate-950/20
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                         .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -374,8 +374,8 @@ fun PodEditDialog(
                                 onClick = handleDeleteClick,
                                 enabled = !hasPins,
                                 colors = ButtonDefaults.textButtonColors(
-                                    contentColor = Color(0xFFEF4444),
-                                    disabledContentColor = Color(0xFF475569) // slate-600
+                                    contentColor = MaterialTheme.colorScheme.error,
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
@@ -398,8 +398,8 @@ fun PodEditDialog(
                             onClick = onDismiss,
                             modifier = Modifier.height(44.dp),
                             shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, Color(0xFF475569)), // slate-600
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFCBD5E1)) // slate-300
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Text("CANCEL", fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.sp)
                         }
@@ -408,9 +408,9 @@ fun PodEditDialog(
                             enabled = name.trim().isNotBlank(),
                             modifier = Modifier.height(44.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = CyanAccent,
-                                contentColor = Color.White,
-                                disabledContainerColor = CyanAccent.copy(alpha = 0.5f)
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
