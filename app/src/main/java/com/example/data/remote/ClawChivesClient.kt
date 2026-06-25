@@ -54,8 +54,8 @@ class ClawChivesClient(
                 takeFrom(base + "/") // ensure trailing slash is handled correctly, Ktor can be picky
             }
             // Enforce stable API version boundary
-            header("X-Client-Version", "0.0.4.2")
-            header("Accept-Version", "0.0.4.2")
+            header("X-Client-Version", "0.0.4.3")
+            header("Accept-Version", "0.0.4.3")
             header("Accept", "application/json")
         }
         HttpResponseValidator {

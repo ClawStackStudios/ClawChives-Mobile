@@ -15,3 +15,4 @@ This keeps my memory compact and resilient against signal to noise degredation. 
 *   **Adaptive UI:** XML layers + sharp-cli density scaling.
 *   **Motion:** CubicBezier(0.2, 0.8, 0.2, 1) + 450ms.
 *   **Exits:** Graceful teardown over hard process kill.
+*   **Releases:** Bump `versionCode` in build.gradle.kts +1, rename RELEASE file to new `versionName`, update version tags in all documents/code (e.g. BOUNDARY.md, client headers).

@@ -15,8 +15,8 @@ android {
     applicationId = "com.aistudio.clawchives.bxpqr"
     minSdk = 24
     targetSdk = 36
-    versionCode = 4
-    versionName = "4.0"
+    versionCode = 5
+    versionName = "0.0.4.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

@@ -39,8 +39,8 @@ class StateBoundaryIntegrationTest {
         val result = client.getHealth()
 
         assertTrue(result.isSuccess)
-        assertEquals("0.0.4.2", capturedClientVersion)
-        assertEquals("0.0.4.2", capturedAcceptVersion)
+        assertEquals("0.0.4.3", capturedClientVersion)
+        assertEquals("0.0.4.3", capturedAcceptVersion)
         assertEquals("application/json", capturedAccept)
     }
 

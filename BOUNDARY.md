@@ -1,4 +1,4 @@
-# 🔌 ClawChives Server Boundary API Contract (v0.0.4.2)
+# 🔌 ClawChives Server Boundary API Contract (v0.0.4.3)
 
 This document formalizes the validation mechanics, routing fallbacks, and diagnostic responsibilities between the **ClawChives Mobile Client** and the **ClawChives Web Server**. Ensuring a harmonious operation requires rigid state synchronization and validation.
 
@@ -7,7 +7,7 @@ All communication between the Android Client and the Web Server explicitly commu
 
 ### Boundary Definitions
 
-- **Versioning Protocol**: The mobile application injects stateless `X-Client-Version: 0.0.4.2` and `Accept-Version: 0.0.4.2` headers on every outward request to explicitly communicate the client's protocol capability level.
+- **Versioning Protocol**: The mobile application injects stateless `X-Client-Version: 0.0.4.3` and `Accept-Version: 0.0.4.3` headers on every outward request to explicitly communicate the client's protocol capability level.
 - **Stateless Communication**: Aside from an initial token handshake, the client communicates purely statelessly via `Authorization: Bearer <sessionToken>`.
 
 ---

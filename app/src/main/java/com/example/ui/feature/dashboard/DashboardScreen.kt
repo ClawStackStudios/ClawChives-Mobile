@@ -1,5 +1,11 @@
 package com.example.ui.feature.dashboard
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -543,25 +549,60 @@ fun DashboardScreen(
         ) {
             when (val state = uiState) {
                 is DashboardState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = CyanAccent
-                    )
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(6) {
+                            SkeletonPinchmarkCard()
+                        }
+                    }
                 }
                 is DashboardState.Error -> {
                     Column(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                            .align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Error loading pool", color = RedAccent)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = state.message, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Error",
+                            tint = RedAccent,
+                            modifier = Modifier.size(64.dp)
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Connection Interrupted", 
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "We encountered an issue communicating with the server or parsing the data. Please verify your connection.", 
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = state.message, 
+                            color = RedAccent.copy(alpha = 0.8f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = { viewModel.loadBookmarks() },
-                            colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
+                            colors = ButtonDefaults.buttonColors(containerColor = CyanAccent),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth(0.6f)
                         ) {
-                            Text("Retry")
+                            Text("Try Again", color = Color.Black, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -582,7 +623,17 @@ fun DashboardScreen(
                             )
                         }
                     ) {
-                        if (state.bookmarks.isEmpty()) {
+                        if (state.isRefreshing) {
+                            LazyColumn(
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(6) {
+                                    SkeletonPinchmarkCard()
+                                }
+                            }
+                        } else if (state.bookmarks.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                                 Text(
                                     text = "Your reef is empty. Pull to refresh.",
@@ -1102,6 +1153,60 @@ fun CustomBottomBarWithHump(
                 elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Bookmark", tint = Color.Black)
+            }
+        }
+    }
+}
+
+@Composable
+fun ShimmerPulse(
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(4.dp)
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha))
+    )
+}
+
+@Composable
+fun SkeletonPinchmarkCard() {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ShimmerPulse(modifier = Modifier.fillMaxWidth(0.6f).height(20.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ShimmerPulse(modifier = Modifier.fillMaxWidth(0.9f).height(14.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    ShimmerPulse(modifier = Modifier.fillMaxWidth(0.4f).height(14.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                ShimmerPulse(modifier = Modifier.size(40.dp), shape = RoundedCornerShape(8.dp))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ShimmerPulse(modifier = Modifier.width(60.dp).height(24.dp), shape = RoundedCornerShape(12.dp))
+                ShimmerPulse(modifier = Modifier.width(80.dp).height(24.dp), shape = RoundedCornerShape(12.dp))
             }
         }
     }
