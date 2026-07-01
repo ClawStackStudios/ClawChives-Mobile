@@ -15,8 +15,8 @@ Git Hygiene Mandate: Maintain clean commit history and semantic release tags. Su
 
 # Application Topology Map
 
-**Topology Phase:** Floor (Graceful Loading & Error Boundaries)
-**Verified Intent:** Added a React-style Error Boundary visual fallback (`GracefulErrorFallback` conceptually) directly within Jetpack Compose state handling in `DashboardScreen`, providing a robust recovery UI for connection failures. Implemented a `SkeletonPinchmarkCard` and `ShimmerPulse` to show a skeleton loading state instead of a basic spinner during initial data fetches and explicit pull-to-refresh operations.
+**Topology Phase:** Floor (Gesture Pull-to-Refresh)
+**Verified Intent:** Integrated Material3 `PullToRefreshBox` into the `DashboardScreen`, providing users with an intuitive gesture-based refresh mechanism to pull the latest Pinchmarks and Pods from the server. Extended `DashboardState.Success` with an `isRefreshing` property to cleanly decouple the background swipe-refresh indicator state from the initial blocking load state (`DashboardState.Loading`).
 
 ## The Four Core Components Mapping
 
